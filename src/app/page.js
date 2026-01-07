@@ -1,14 +1,9 @@
-import Footer from "@/components/footer/Footer";
-import Header from "@/components/header/Header";
-import Main from "@/components/mainContainer/Main";
-import Image from "next/image";
+import HomeComp from "@/components/home/home";
 
 export default function Home() {
   return (
-    <>
-      <Header />
-      <Main />
-      <Footer />
+    <>  
+      <HomeComp /> 
     </>
   );
 }

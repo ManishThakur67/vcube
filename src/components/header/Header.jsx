@@ -1,7 +1,7 @@
 import React from 'react'
 import styles from './Header.module.scss'
 import Image from 'next/image'
-import { Container } from '@mui/material'
+import { Button, Container } from '@mui/material'
 
 const Header = () => {
   return (
@@ -18,6 +18,9 @@ const Header = () => {
                 <div className={`flex-grow-1 text-center ${styles.heading}`}>
                     <h3><strong>Cricket ScoreBook</strong></h3>
                 </div>
+                <Button variant="outlined" color="error">
+                  Clear Tournament
+                </Button>
             </div>
         </Container>
       </div>
