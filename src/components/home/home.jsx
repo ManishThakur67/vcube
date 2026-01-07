@@ -6,12 +6,14 @@ import styles from './home.module.scss'
 const HomeComp = () => {
   return (
     <>
+      <div className={`d-flex flex-column justify-content-center align-items-center`}>
         <h2 className={`mb-4 ${styles.tournamentHeading}`}>Create Your Own Tournament</h2>
-        <Button variant="outlined" color="primary">
-            <Link href="/scorebook/createtournament">
-            Create Tournament                
-            </Link>
-        </Button>
+        <Link href="/scorebook/createtournament">
+          <Button variant="outlined" color="primary">
+              Create Tournament                
+          </Button>
+        </Link>
+      </div>
     </>
   )
 }

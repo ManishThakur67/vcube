@@ -26,8 +26,7 @@ const Main = ({children}) => {
                 className='d-flex flex-column align-items-stretch justify-content-center'
             >
                 <div className='mt-3 mb-2'>
-                  <BreadNavigation/>
-                  <hr />
+                  <BreadNavigation/>                  
                 </div>
                 <div className="w-100 flex-grow-1">
                   {children}
