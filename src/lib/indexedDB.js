@@ -62,6 +62,28 @@ export async function addTournament(tournament) {
   });
 }
 
+export async function updateTournament(tournament) {
+  if (!tournament.id) {
+    throw new Error('Tournament ID is required for update');
+  }
+
+  const db = await openDB();
+
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('tournaments', 'readwrite');
+    const store = tx.objectStore('tournaments');
+
+    // put() updates existing record
+    const request = store.put({
+      ...tournament,
+      updatedAt: new Date().toISOString(),
+    });
+
+    request.onsuccess = () => resolve(true);
+    request.onerror = () => reject(request.error);
+  });
+}
+
 export async function getAllTournaments() {
   const db = await openDB();
 

@@ -7,7 +7,7 @@ const HomeComp = () => {
   return (
     <>
       <div className={`d-flex flex-column justify-content-center align-items-center`}>
-        <h2 className={`mb-4 ${styles.tournamentHeading}`}>Create Your Own Tournament</h2>
+        <h2 className={`mb-4 ${styles.tournamentHeading} text-center`}>Create Your Own Tournament</h2>
         <Link href="/scorebook/createtournament">
           <Button variant="outlined" color="primary">
               Create Tournament                
