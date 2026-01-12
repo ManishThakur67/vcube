@@ -9,6 +9,7 @@ import { addTournament, getAllTournaments, updateTournament } from '@/lib/indexe
 import { toBase64 } from '@/lib/utility';
 import Image from 'next/image';
 import NumberField from '../numberInput/numberInput';
+import { useRouter } from 'next/navigation';
 
 
 const VisuallyHiddenInput = styled('input')({
@@ -36,10 +37,10 @@ const initialTournamentData = {
 
 
 const TournamentForm = () => {
+    const router = useRouter()
     const [tournamentData, setTournamentData] = useState(initialTournamentData) 
     const [alertMessage, setAlertMessage] = useState("")  
     const [showAlert, setShowAlert] = useState(false)
-    const [logoImage, setLogoImage] = useState(null)
 
     useEffect(() => {
         setDataInDb();
@@ -54,20 +55,21 @@ const TournamentForm = () => {
     }
 
     const handleOnChange = async (e) => {               
-        const { name, value, files, type } = e.target;        
+        const { name, value, files, type } = e.target;  
+        const base64Image = type === 'file' && await toBase64(files?.[0])     
         setTournamentData(prev => ({
             ...prev,
-            [name]: type === 'file' ? files[0] : value,
+            [name]: type === 'file' ? base64Image : value,
         }));
-        if (name === 'logo' && files?.[0]) {
-            showImage(files[0]);
-        }
+        // if (name === 'logo' && files?.[0]) {
+        //     showImage(files[0]);
+        // }
     }
 
-    const showImage = async (file) => {
-        const base64File = await toBase64(file)
-        setLogoImage(base64File)
-    }
+    // const showImage = async (file) => {
+    //     const base64File = await toBase64(file)
+    //     setLogoImage(base64File)
+    // }
 
     const checkParameter = async (data) => {
         const {name, tieBreak} = data
@@ -97,6 +99,7 @@ const TournamentForm = () => {
                 setAlertMessage('Tournament Updated Successfully')
             }
             setShowAlert(true)
+            router.push('/scorebook/addteam')
         }
     }
 
@@ -157,12 +160,17 @@ const TournamentForm = () => {
         </Grid>
         <Grid size={{ sm: 12, md: 3 }}>
             {
-                logoImage ? 
+                tournamentData?.logo ? 
                 <Image
-                    src={logoImage}
-                    width={100}
-                    height={100}
-                    alt="Picture of the author"
+                    src={tournamentData?.logo}
+                    width={500}          // intrinsic width
+                    height={200}         // intrinsic height (keep ratio)
+                    style={{
+                    width: '100%',
+                    height: 'auto',
+                    objectFit: 'contain',
+                    }}
+                    alt="logo"
                 /> : null
             }
         </Grid>
@@ -172,7 +180,6 @@ const TournamentForm = () => {
         <Grid container spacing={2}>
         <Grid size={{ sm: 12, md: 3 }}>
             <strong><label className='mb-3'>Each Match Runs Point</label></strong>
-            {/* <TextField id="outlined-basic" name="runPoint" onChange={handleOnChange} value={tournamentData?.runPoint} sx={{width:'100%'}} label="Each Match Runs Point" variant="outlined" /> */}
             <NumberField label="Run Point" name="runPoint"
             onValueChange={(value) =>
             setTournamentData(prev => ({
@@ -186,7 +193,6 @@ const TournamentForm = () => {
         </Grid>
         <Grid size={{ sm: 12, md: 3 }}>
             <strong><label className='mb-3'>Each Match Wicket Point</label></strong>
-            {/* <TextField id="outlined-basic" name="wicketPoint" onChange={handleOnChange} value={tournamentData?.wicketPoint} sx={{width:'100%'}} label="Each Match Wicket Point" variant="outlined" /> */}
             <NumberField label="Wicket Point" name="wicketPoint" 
             onValueChange={(value) =>
             setTournamentData(prev => ({
@@ -206,7 +212,6 @@ const TournamentForm = () => {
             }))
             } 
             value={tournamentData?.catchPoint} min={1} max={100} />
-            {/* <TextField id="outlined-basic" name="catchPoint" onChange={handleOnChange} value={tournamentData?.catchPoint} sx={{width:'100%'}} label="Each Match Catch Point" variant="outlined" /> */}
         </Grid>               
         <Grid size={{ sm: 12, md: 3 }}>
             <strong><label className='mb-3'>Each Match Runout Point</label></strong>
@@ -218,7 +223,6 @@ const TournamentForm = () => {
             }))
             } 
             value={tournamentData?.stumpingPoint} min={1} max={100} />
-            {/* <TextField id="outlined-basic" name="stumpingPoint" onChange={handleOnChange} value={tournamentData?.stumpingPoint} sx={{width:'100%'}} label="Each Match Runout Point" variant="outlined" /> */}
         </Grid>
         <Grid size={{ sm: 12, md: 3 }}>
             <strong><label className='mb-3'>Each Match Stumping Point</label></strong>
@@ -230,7 +234,6 @@ const TournamentForm = () => {
             }))
             } 
             value={tournamentData?.runOutPoint} min={1} max={100} />
-            {/* <TextField id="outlined-basic" name="runOutPoint" onChange={handleOnChange} value={tournamentData?.runOutPoint} sx={{width:'100%'}} label="Each Match Stumping Point" variant="outlined" /> */}
         </Grid>
       </Grid>
       <hr />  

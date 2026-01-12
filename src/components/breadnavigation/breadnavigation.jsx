@@ -22,7 +22,7 @@ const BreadNavigation = () => {
                         <HomeIcon sx={{ mr: 0.5 }} fontSize="inherit" />
                         Create Tournament
                     </div>
-                    <div>
+                    <div className={pathname === '/scorebook/addteam' && styles.highlight}>
                         <WhatshotIcon sx={{ mr: 0.5 }} fontSize="inherit" />
                         Add Team Name                
                     </div>
