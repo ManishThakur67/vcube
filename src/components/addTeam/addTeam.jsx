@@ -20,7 +20,8 @@ const AddTeamComp = () => {
 
   const getTeamData = async () => {
     const data = await getTeamsByTournament()
-    if(data || data?.length){
+    console.log(data)
+    if(data?.length){
       router.push('/scorebook/singlematch')
     }
   }
@@ -33,8 +34,14 @@ const AddTeamComp = () => {
   }
 
   const handleOnclick = async () => {
-    await addTeams(teamData)
-    setAlertMessage('Team Added Successfully')
+    const obj = Object.keys(teamData)
+    console.log(teamSelected, obj?.length,'data lenngth')
+    if(teamSelected === obj?.length){
+      await addTeams(teamData)
+      setAlertMessage('Team Added Successfully')
+    }else{
+      setAlertMessage(`Add ${teamSelected} Team Name`)
+    }
     setShowAlert(true)
   }
 
@@ -59,7 +66,7 @@ const AddTeamComp = () => {
   return (
     <>
         <div className='d-flex flex-column justify-content-center align-items-center mb-3'>
-            <strong><label className='mb-3'>Select Number of Teams</label></strong>
+            <strong><label className='mb-3'>Add Number of Teams</label></strong>
             <FormControl>
                 <NumberField name="team"
                 onValueChange={(value) => setTeamSelected(value)}
