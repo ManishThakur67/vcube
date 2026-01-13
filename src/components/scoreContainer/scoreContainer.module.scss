@@ -1,0 +1,28 @@
+.scoreParent{
+    width: fit-content;
+    border: 1px solid #cccccc;
+    border-radius: 10px;
+    padding: 15px;
+    padding-bottom: 0px;
+    margin: auto;
+}
+.scoreValue{
+    font-size: 30px;
+    font-weight: bold;
+}
+.scoreValue:first-child{
+    border-right: 1px solid #cccccc;
+}
+.netRun{
+    margin: 0px -15px 0 -15px;
+}
+.netRunitem{
+    border: 1px solid #cccccc;
+    padding: 6px;
+}
+.netRunitem:first-child{
+    border-bottom-left-radius: 10px;
+}
+.netRunitem:last-child{
+    border-bottom-right-radius: 10px;
+}

@@ -11,18 +11,17 @@ import styles from './breadnavigation.module.scss'
 
 const BreadNavigation = () => {
   const pathname = usePathname()
-  console.log(pathname)
   return (
     <>
         {
             pathname !== '/' &&
             <>
                 <Breadcrumbs aria-label="breadcrumb">
-                    <div className={pathname === '/scorebook/createtournament' && styles.highlight}>
+                    <div className={pathname === '/scorebook/createtournament' ? styles.highlight : ''}>
                         <HomeIcon sx={{ mr: 0.5 }} fontSize="inherit" />
                         Create Tournament
                     </div>
-                    <div className={pathname === '/scorebook/addteam' && styles.highlight}>
+                    <div className={pathname === '/scorebook/addteam' ? styles.highlight : ''}>
                         <WhatshotIcon sx={{ mr: 0.5 }} fontSize="inherit" />
                         Add Team Name                
                     </div>

@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { Grid, TextField, Button, FormControl, InputLabel, Select, MenuItem, Snackbar } from '@mui/material'
 import { styled } from '@mui/material/styles';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
@@ -10,6 +10,7 @@ import { toBase64 } from '@/lib/utility';
 import Image from 'next/image';
 import NumberField from '../numberInput/numberInput';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 
 const VisuallyHiddenInput = styled('input')({
@@ -41,6 +42,7 @@ const TournamentForm = () => {
     const [tournamentData, setTournamentData] = useState(initialTournamentData) 
     const [alertMessage, setAlertMessage] = useState("")  
     const [showAlert, setShowAlert] = useState(false)
+    const [dbData, setDBData] = useState(null)
 
     useEffect(() => {
         setDataInDb();
@@ -51,6 +53,7 @@ const TournamentForm = () => {
         const tournaments = await getAllTournaments();
         if(tournaments && tournaments[0]?.id){
             setTournamentData(tournaments[0])
+            setDBData(tournaments[0])
         } 
     }
 
@@ -89,7 +92,6 @@ const TournamentForm = () => {
 
     const pushTournamentData = async () => {
         const mandatoryCheck = await checkParameter(tournamentData)
-        console.log(tournamentData,'>> data')
         if(mandatoryCheck){
             if(!tournamentData?.id){
                 await addTournament(tournamentData);
@@ -111,11 +113,54 @@ const TournamentForm = () => {
         setShowAlert(false);
     };
 
+    const deepEqual = (a, b) => {
+        if (a === b) return true
+
+        // handle null / undefined
+        if (a == null || b == null) return a === b
+
+        // handle different types
+        if (typeof a !== typeof b) return false
+
+        // handle arrays
+        if (Array.isArray(a)) {
+            if (!Array.isArray(b) || a.length !== b.length) return false
+            return a.every((item, index) => deepEqual(item, b[index]))
+        }
+
+        // handle objects
+        if (typeof a === 'object') {
+            const keysA = Object.keys(a)
+            const keysB = Object.keys(b)
+
+            if (keysA.length !== keysB.length) return false
+
+            return keysA.every(key => deepEqual(a[key], b[key]))
+        }
+
+        // handle primitives
+        return a === b
+    }
+
+
+    const comparedData = useMemo(() => {
+        if (!tournamentData || !dbData) return false
+
+        return deepEqual(tournamentData, dbData)
+    }, [tournamentData, dbData])
+
   return (
     <>
       <div className='d-flex mb-4 '>
         <h4 className='flex-grow-1'>Tournament Details</h4>
-        <Button variant="outlined" onClick={pushTournamentData}>Save & Next</Button>
+        {
+            (!tournamentData?.id || !comparedData) ? 
+            <Button variant="outlined" onClick={pushTournamentData}>Save & Next</Button>
+            :
+            <Link href="/scorebook/addteam">
+                <Button variant="outlined">Next</Button>
+            </Link>
+        }
       </div>
       <Grid container spacing={2}>
         <Grid size={{ sm: 12, md: 3 }}>

@@ -1,9 +1,23 @@
+'use client'
+
 import React from 'react'
 import styles from './Header.module.scss'
 import Image from 'next/image'
 import { Button, Container } from '@mui/material'
+import { clearDatabase } from '@/lib/indexedDB';
+import { useRouter } from 'next/navigation'
 
 const Header = () => {
+  const router = useRouter()
+  const clearDb = async () => {
+    console.log('111')
+    router.push('/')
+    await deleteIndexedDB();
+    // setTimeout(() => {
+    //   console.log('222')
+    //   window.location.reload();      
+    // }, 0);
+  }
   return (
     <>
       <div className={styles.header}>
@@ -18,7 +32,7 @@ const Header = () => {
                 <div className={`flex-grow-1 text-center ${styles.heading}`}>
                     <h3><strong>Cricket ScoreBook</strong></h3>
                 </div>
-                <Button variant="outlined" color="error">
+                <Button variant="outlined" color="error" onClick={clearDb}>
                   Clear Tournament
                 </Button>
             </div>
