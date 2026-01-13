@@ -10,13 +10,8 @@ import { useRouter } from 'next/navigation'
 const Header = () => {
   const router = useRouter()
   const clearDb = async () => {
-    console.log('111')
+    await deleteIndexedDB();    
     router.push('/')
-    await deleteIndexedDB();
-    // setTimeout(() => {
-    //   console.log('222')
-    //   window.location.reload();      
-    // }, 0);
   }
   return (
     <>
