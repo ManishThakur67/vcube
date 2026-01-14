@@ -73,7 +73,7 @@ function NumberField({ id: idProp, label, error, size = 'medium', ...other }) {
                   },
                 }}
               >
-                <BaseNumberField.Increment
+                {/* <BaseNumberField.Increment
                   render={<IconButton size={size} aria-label="Increase" />}
                 >
                   <KeyboardArrowUpIcon
@@ -89,7 +89,7 @@ function NumberField({ id: idProp, label, error, size = 'medium', ...other }) {
                     fontSize={size}
                     sx={{ transform: 'translateY(-2px)' }}
                   />
-                </BaseNumberField.Decrement>
+                </BaseNumberField.Decrement> */}
               </InputAdornment>
             }
             sx={{ pr: 0 }}

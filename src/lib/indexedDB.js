@@ -1,5 +1,5 @@
 const DB_NAME = 'scorebookDB';
-const DB_VERSION = 2; // ⬅️ bumped version
+const DB_VERSION = 5; // ⬅️ bumped version
 const TOURNAMENT_STORE = 'tournaments';
 const TEAM_STORE = 'teams';
 
@@ -24,7 +24,8 @@ export function openDB() {
           autoIncrement: true,
         });
 
-        store.createIndex('name', 'name', { unique: false });
+        store.createIndex('name', 'name', { unique: true });  
+        store.createIndex('matchTypeId', 'matchTypeId', { unique: false });      
         store.createIndex('tieBreak', 'tieBreak', { unique: false });
         store.createIndex('logo', 'logo', { unique: false });
         store.createIndex('runPoint', 'runPoint', { unique: false });
@@ -46,6 +47,63 @@ export function openDB() {
         teamStore.createIndex('tournamentId', 'tournamentId', { unique: false });
         teamStore.createIndex('teamKey', 'teamKey', { unique: false });
         teamStore.createIndex('teamName', 'teamName', { unique: false });
+      }
+      
+      /* =======================
+        MATCH TYPES
+      ======================= */
+      if (!db.objectStoreNames.contains('matchTypes')) {
+      const store = db.createObjectStore('matchTypes', {
+        keyPath: 'id',
+        autoIncrement: true,
+      });
+
+      store.createIndex('value', 'value', { unique: true });
+      store.createIndex('flag', 'flag', { unique: false });
+      store.createIndex('url', 'url', { unique: false })
+
+      store.add({ value: 'Single Match', flag: true, url: '/scorebook/addteam' });
+      store.add({ value: 'Series', flag: false, url: '/scorebook/addteam' });
+      store.add({ value: 'Tournament', flag: false, url: '/scorebook/createtournament' });
+    }
+
+      /* =======================
+        RUN TYPES
+      ======================= */
+      if (!db.objectStoreNames.contains('runTypes')) {
+        const store = db.createObjectStore('runTypes', {
+          keyPath: 'id',
+          autoIncrement: true,
+        });
+
+        store.createIndex('value', 'value', { unique: true });
+
+        ['Wide', 'No Ball', 'Declare', 'Byes', 'Leg Byes'].forEach(value => {
+          store.add({ value });
+        });
+      }
+
+      /* =======================
+        WICKET TYPES
+      ======================= */
+      if (!db.objectStoreNames.contains('wicketTypes')) {
+        const store = db.createObjectStore('wicketTypes', {
+          keyPath: 'id',
+          autoIncrement: true,
+        });
+
+        store.createIndex('value', 'value', { unique: true });
+
+        [
+          'Bowled',
+          'Caught',
+          'Stumping',
+          'Run Out',
+          'Declare Out',
+          'Retired Hurt',
+        ].forEach(value => {
+          store.add({ value });
+        });
       }
     };
 
@@ -184,6 +242,48 @@ export async function getTeamsByTournament(tournamentId) {
       const index = store.index('tournamentId');
       request = index.getAll(tournamentId);
     }
+
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+export async function getMatchTypes() {
+  const db = await openDB();
+
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('matchTypes', 'readonly');
+    const store = tx.objectStore('matchTypes');
+
+    const request = store.getAll();
+
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+export async function getRunTypes() {
+  const db = await openDB();
+
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('runTypes', 'readonly');
+    const store = tx.objectStore('runTypes');
+
+    const request = store.getAll();
+
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+export async function getWicketTypes() {
+  const db = await openDB();
+
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('wicketTypes', 'readonly');
+    const store = tx.objectStore('wicketTypes');
+
+    const request = store.getAll();
 
     request.onsuccess = () => resolve(request.result);
     request.onerror = () => reject(request.error);
