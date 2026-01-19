@@ -8,6 +8,7 @@ import {
 } from "@mui/material";
 import React, { useEffect, useMemo, useState } from "react";
 import OverComponent from "../overComponent/overComponent";
+import styles from './overCalculator.module.scss'
 
 const MAX_RUN = 7;
 const EXTRA = {
@@ -279,42 +280,96 @@ const updateMatchOver = (updatedOver) => {
     );
     }, [matchData, currentOvers, ongoingOver]);
 
+    const countLegalBalls = (overs = []) =>
+    overs.reduce((total, over) => {
+        const key = Object.keys(over).find(k => k.startsWith("over "));
+        const legalBalls = over[key].filter(isLegalBall).length;
+        return total + legalBalls;
+    }, 0);
+
+    const totalBalls =
+    matchData ? matchData.firstInning.length * 6 : 0;
+
+    const ballsRemaining =
+    matchData?.currentInning === 2
+        ? totalBalls - countLegalBalls(currentOvers)
+        : null;
+
+const getMatchResult = (matchData, currentOvers) => {
+  if (!matchData || matchData.currentInning !== 2) return null;
+
+  const score = calculateTotalScore(currentOvers);
+  const target = matchData.target;
+
+  const totalBalls = matchData.firstInning.length * 6;
+  const ballsBowled = countLegalBalls(currentOvers);
+  const ballsRemaining = totalBalls - ballsBowled;
+
+  if (score >= target) return "INNING_2_WON";
+  if (ballsRemaining === 0 && score < target) return "INNING_1_WON";
+
+  return "ONGOING";
+};
+
+const matchResult = useMemo(
+  () => getMatchResult(matchData, currentOvers),
+  [matchData, currentOvers]
+);
+
   /* ------------------ UI ------------------ */
-  console.log(matchData,'>>>>>> matchData')
 
   return (
     <>
       {matchData && (
         <>
-        <div className="d-flex">            
-            <h3 className="flex-grow-1">
-                Inning: {matchData?.currentInning} | 
-                Score: {calculateTotalScore(currentOvers)}
-
-                {matchData.currentInning === 2 && (
-                    <>
-                    {" "} | To Win: {matchData.target}
-                    </>
+        <div className={`d-flex justify-content-center ${styles.winningContainer}`}>            
+            <h5>
+                {matchResult === "INNING_2_WON" && (
+                  <>Inning 2 Won 🎉</>
                 )}
-            </h3>
-            {matchData.currentInning === 2 && (
-                <h4>
+                {matchResult === "INNING_1_WON" && (
+                  <>Inning 1 Won 🏆</>
+                )}
+            </h5>    
+        </div>       
+        <div className="d-flex">  
+            <div className="flex-grow-1">
+                <p className={styles.scoreBoard}>
+                    Inning: {matchData?.currentInning} | 
+                    Score: {calculateTotalScore(currentOvers)}
+
+                    {matchData.currentInning === 2 && (
+                        <>
+                        {" "} | Target: {matchData.target}
+                        </>
+                    )}
+                </p>                
+            </div>          
+            {/* {matchData.currentInning === 2 && (
+                <p>
                     {runsRemaining > 0
                     ? `Need ${runsRemaining} runs to win`
                     : "Match Won 🎉"}
-                </h4>
-            )}
+                </p>
+            )} */}
             {isMatchFinished && (
             <Button
             color="success"
             variant="contained"
             onClick={() => setConfirmReset(true)}
             >
-            New Match
+            Start New Match
             </Button>
             )}
-        </div>        
-
+        </div>   
+        <div className={`${styles.toWin} mb-2`}>
+            {matchData.currentInning === 2 && (
+                <p className="m-0">
+                    {runsRemaining > 0
+                    && `Need ${runsRemaining} runs to win in ${ballsRemaining} balls`}
+                </p>
+            )}
+        </div>   
 
         <Grid container spacing={2}>
             {currentOvers.map((item) => {

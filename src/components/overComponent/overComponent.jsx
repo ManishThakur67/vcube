@@ -18,7 +18,48 @@ const OverComponent = ({ data, over }) => {
 
   if (!balls || data.isCompleted === "Pending") return null;
 
-  console.log("OverComponent render", over);
+
+  const getBallStyle = (ball) => {
+  // Extra → white
+  if (ball.extra) {
+    return {
+      bgcolor: "#000000",
+      color: "#ffffff",
+      border: "1px solid #ccc",
+    };
+  }
+
+  // Six → yellow
+  if (ball.run === 6) {
+    return {
+      bgcolor: "#FFD700",
+      color: "#000000",
+    };
+  }
+
+  // Four → green
+  if (ball.run === 4) {
+    return {
+      bgcolor: "#4CAF50",
+      color: "#ffffff",
+    };
+  }
+
+  // dot ball → green
+  if (ball.run === 0) {
+    return {
+      bgcolor: "#cccccc",
+      color: "#000000",
+    };
+  }
+
+  // Default → red
+  return {
+    bgcolor: "#f44336",
+    color: "#ffffff",
+  };
+};
+
 
   const renderBall = (ball) => {
     if (ball.extra) {
@@ -30,7 +71,7 @@ const OverComponent = ({ data, over }) => {
   return (
     <div>
       <strong>
-        <p>{`Over ${over} - ${statusLabel}`}</p>
+        <p>{`Over ${over}  ${statusLabel}`}</p>
       </strong>
 
       <div className="d-flex flex-wrap">
@@ -41,7 +82,8 @@ const OverComponent = ({ data, over }) => {
                 width: 30,
                 height: 30,
                 fontSize: 12,
-                color: "#000000",
+                fontWeight: "bold",
+                ...getBallStyle(ball),
               }}
             >
               {renderBall(ball)}
