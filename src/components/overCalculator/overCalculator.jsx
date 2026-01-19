@@ -316,22 +316,27 @@ const matchResult = useMemo(
   [matchData, currentOvers]
 );
 
+console.log(matchResult,'>>> matchResult')
   /* ------------------ UI ------------------ */
 
   return (
     <>
       {matchData && (
         <>
-        <div className={`d-flex justify-content-center ${styles.winningContainer}`}>            
-            <h5>
-                {matchResult === "INNING_2_WON" && (
-                  <>Inning 2 Won 🎉</>
-                )}
-                {matchResult === "INNING_1_WON" && (
-                  <>Inning 1 Won 🏆</>
-                )}
-            </h5>    
-        </div>       
+        {
+            (matchResult !== 'ONGOING' && matchResult) ?
+            <div className={`d-flex justify-content-center ${styles.winningContainer}`}>            
+                <h5>
+                    {matchResult === "INNING_2_WON" && (
+                    <>Inning 2 Won 🎉</>
+                    )}
+                    {matchResult === "INNING_1_WON" && (
+                    <>Inning 1 Won 🏆</>
+                    )}
+                </h5>    
+            </div>       
+            : null
+        }
         <div className="d-flex">  
             <div className="flex-grow-1">
                 <p className={styles.scoreBoard}>
@@ -362,14 +367,14 @@ const matchResult = useMemo(
             </Button>
             )}
         </div>   
-        <div className={`${styles.toWin} mb-2`}>
-            {matchData.currentInning === 2 && (
+        {matchData.currentInning === 2 && (
+            <div className={`${styles.toWin} mb-2`}>
                 <p className="m-0">
                     {runsRemaining > 0
                     && `Need ${runsRemaining} runs to win in ${ballsRemaining} balls`}
                 </p>
-            )}
-        </div>   
+            </div>   
+        )}
 
         <Grid container spacing={2}>
             {currentOvers.map((item) => {
