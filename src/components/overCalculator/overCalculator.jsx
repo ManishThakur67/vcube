@@ -60,7 +60,7 @@ const OverCalculator = ({ overData }) => {
   const [extra, setExtra] = useState(null);
   const [extraDialog, setExtraDialog] = useState(false);
   const [confirmReset, setConfirmReset] = useState(false);
-  const [isReset, setIsReset] = useState(false);
+//   const [isReset, setIsReset] = useState(false);
 
   const resetMatch = () => {
   setMatchData(null);
@@ -68,7 +68,7 @@ const OverCalculator = ({ overData }) => {
   setExtra(null);
   setExtraDialog(false);
   setConfirmReset(false);
-  setIsReset(true);
+//   setIsReset(true);
 
   // clear storage
   localStorage.removeItem("matchData");
@@ -82,19 +82,29 @@ useEffect(() => {
   }
 }, [matchData]);
 
+// useEffect(() => {
+//   const storedMatch = localStorage.getItem("matchData");
+
+//   if (storedMatch && !isReset) {
+//     setMatchData(JSON.parse(storedMatch));
+//     return;
+//   }
+
+//   if (overData) {
+//     setMatchData(overData);
+//     setIsReset(false);
+//   }
+// }, []); // still run once
+
 useEffect(() => {
-  const storedMatch = localStorage.getItem("matchData");
+  const stored = localStorage.getItem("matchData");
 
-  if (storedMatch && !isReset) {
-    setMatchData(JSON.parse(storedMatch));
-    return;
-  }
-
-  if (overData) {
+  if (stored) {
+    setMatchData(JSON.parse(stored));
+  } else if (overData) {
     setMatchData(overData);
-    setIsReset(false);
   }
-}, []); // still run once
+}, []); // ✅ run ONCE
 
 
   /* ---------- load run types ---------- */
@@ -103,18 +113,18 @@ useEffect(() => {
   }, []);
 
   /* ---------- initialize match ---------- */
-  useEffect(() => {
-  const storedMatch = localStorage.getItem("matchData");
+//   useEffect(() => {
+//   const storedMatch = localStorage.getItem("matchData");
 
-  if (storedMatch) {
-    setMatchData(JSON.parse(storedMatch));
-    return;
-  }
+//   if (storedMatch) {
+//     setMatchData(JSON.parse(storedMatch));
+//     return;
+//   }
 
-  if (overData) {
-    setMatchData(overData);
-  }
-}, []); // 👈 EMPTY dependency array
+//   if (overData) {
+//     setMatchData(overData);
+//   }
+// }, []); // 👈 EMPTY dependency array
 
 
 
@@ -190,60 +200,58 @@ useEffect(() => {
 
 
   /* ---------- update match state ---------- */
-  const updateMatchOver = (updatedOver) => {
-    setMatchData((prev) => {
-      if (!prev) return prev;
+const updateMatchOver = (updatedOver) => {
+  const updatedKey = Object.keys(updatedOver).find(k =>
+    k.startsWith("over ")
+  );
 
-      const inningKey =
-        prev.currentInning === 1 ? "firstInning" : "secondInning";
+  setMatchData(prev => {
+    if (!prev) return prev;
 
-      let overs = prev[inningKey].map((o) =>
-        o.hasOwnProperty(Object.keys(updatedOver)[0])
-          ? {
-              ...o,
-              ...updatedOver,
-              isCompleted: isOverCompleted(updatedOver)
-                ? "Completed"
-                : "Start",
-            }
-          : o
-      );
+    const inningKey =
+      prev.currentInning === 1 ? "firstInning" : "secondInning";
 
-      /* start next over */
-      if (isOverCompleted(updatedOver)) {
-        const nextIdx = overs.findIndex(
-          (o) => o.isCompleted === "Pending"
-        );
-
-        if (nextIdx !== -1) {
-          overs = overs.map((o, i) =>
-            i === nextIdx ? { ...o, isCompleted: "Start" } : o
-          );
-        } else {
-          /* inning completed */
-        if (prev.currentInning === 1) {
-            const firstInningScore = calculateTotalScore(overs);
-            const target = firstInningScore + 1;
-
-            return {
-                ...prev,
-                currentInning: 2,
-                target,                    // 👈 ADD THIS
-                firstInning: overs,
-                secondInning: createOvers(overs.length),
-            };
-        }
-
-          return prev; // match finished
-        }
-      }
+    let overs = prev[inningKey].map(o => {
+      if (!o.hasOwnProperty(updatedKey)) return o;
 
       return {
-        ...prev,
-        [inningKey]: overs,
+        ...o,
+        [updatedKey]: updatedOver[updatedKey],
+        isCompleted: isOverCompleted(updatedOver)
+          ? "Completed"
+          : "Start",
       };
     });
-  };
+
+    /* start next over */
+    if (isOverCompleted(updatedOver)) {
+      const nextIdx = overs.findIndex(o => o.isCompleted === "Pending");
+
+      if (nextIdx !== -1) {
+        overs = overs.map((o, i) =>
+          i === nextIdx ? { ...o, isCompleted: "Start" } : o
+        );
+      } else if (prev.currentInning === 1) {
+        const firstInningScore = calculateTotalScore(overs);
+        const target = firstInningScore + 1;
+
+        return {
+          ...prev,
+          currentInning: 2,
+          target,
+          firstInning: overs,
+          secondInning: createOvers(overs.length),
+        };
+      }
+    }
+
+    return {
+      ...prev,
+      [inningKey]: overs,
+    };
+  });
+};
+
 
   const runsRemaining =
   matchData?.currentInning === 2
@@ -263,7 +271,7 @@ useEffect(() => {
     );
     }, [matchData, currentOvers, ongoingOver]);
 
-
+    console.log(matchData,'>>>>>>>>>>.', overData)
 
   /* ------------------ UI ------------------ */
 
