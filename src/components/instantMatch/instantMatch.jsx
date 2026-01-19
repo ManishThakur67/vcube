@@ -23,18 +23,27 @@ const InstantMatch = ({show, closeModal}) => {
     }
 
     const handleOverClick = () => {
-        const array = [];
-
+    const createOvers = () => {
+        const arr = [];
         for (let i = 0; i < over; i++) {
-            array.push({
+        arr.push({
             [`over ${i + 1}`]: [],
-            isCompleted: false,
-            });
+            isCompleted: i === 0 ? "Start" : "Pending",
+        });
         }
-
-        setOverObj(array);
-        localStorage.setItem('overData', JSON.stringify(array));
+        return arr;
     };
+
+    const matchData = {
+        currentInning: 1,
+        firstInning: createOvers(),
+        secondInning: []
+    };
+
+    setOverObj(matchData);
+    localStorage.setItem("matchData", JSON.stringify(matchData));
+    };
+
 
 
   return (
@@ -57,7 +66,7 @@ const InstantMatch = ({show, closeModal}) => {
                 max={100} />
                 <Button sx={{marginTop: '15px'}} onClick={handleOverClick} variant="outlined" color="primary">Add Overs</Button>
             </div>
-            <Divider sx={{ borderBottomWidth: 3 }}/>
+            <Divider sx={{ borderBottomWidth: 3, marginBottom: '20px' }}/>
             <OverCalculator overData={overObject}/>
         </DialogContent>
       </Dialog>
