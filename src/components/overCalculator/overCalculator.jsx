@@ -60,18 +60,41 @@ const OverCalculator = ({ overData }) => {
   const [extra, setExtra] = useState(null);
   const [extraDialog, setExtraDialog] = useState(false);
   const [confirmReset, setConfirmReset] = useState(false);
+  const [isReset, setIsReset] = useState(false);
 
   const resetMatch = () => {
   setMatchData(null);
   setOngoingOver(null);
   setExtra(null);
   setExtraDialog(false);
+  setConfirmReset(false);
+  setIsReset(true);
 
   // clear storage
   localStorage.removeItem("matchData");
   localStorage.removeItem("overData");
   localStorage.removeItem("first_inning_score");
 };
+
+useEffect(() => {
+  if (matchData) {
+    localStorage.setItem("matchData", JSON.stringify(matchData));
+  }
+}, [matchData]);
+
+useEffect(() => {
+  const storedMatch = localStorage.getItem("matchData");
+
+  if (storedMatch && !isReset) {
+    setMatchData(JSON.parse(storedMatch));
+    return;
+  }
+
+  if (overData) {
+    setMatchData(overData);
+    setIsReset(false);
+  }
+}, []); // still run once
 
 
   /* ---------- load run types ---------- */
@@ -81,9 +104,19 @@ const OverCalculator = ({ overData }) => {
 
   /* ---------- initialize match ---------- */
   useEffect(() => {
-    if (!overData) return;
+  const storedMatch = localStorage.getItem("matchData");
+
+  if (storedMatch) {
+    setMatchData(JSON.parse(storedMatch));
+    return;
+  }
+
+  if (overData) {
     setMatchData(overData);
-  }, [overData]);
+  }
+}, []); // 👈 EMPTY dependency array
+
+
 
   /* ---------- derived current overs ---------- */
   const currentOvers = useMemo(() => {
