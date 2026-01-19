@@ -6,14 +6,14 @@ import OverCalculator from '../overCalculator/overCalculator'
 
 const InstantMatch = ({show, closeModal}) => {
     const [open, setOpen] = useState(false)
-    const [over, setOver] = useState(0)
-    const [overObject, setOverObj] = useState(null)
+    const [over, setOver] = useState('')
+    const [overObject, setOverObj] = useState(null)    
     useEffect(() => {
         setOpen(show)
     },[show])
 
     useEffect(() => {
-        const localOverData = localStorage.getItem('overData')
+        const localOverData = localStorage.getItem('matchData')
         if(localOverData) setOverObj(localOverData)
     },[])
 
@@ -42,8 +42,13 @@ const InstantMatch = ({show, closeModal}) => {
 
     setOverObj(matchData);
     localStorage.setItem("matchData", JSON.stringify(matchData));
+    setOver('')
     };
 
+    const startNew = () => {
+        setOverObj(null)
+        setOver('')
+    }
 
 
   return (
@@ -64,10 +69,10 @@ const InstantMatch = ({show, closeModal}) => {
                 value={over}
                 min={1}
                 max={100} />
-                <Button sx={{marginTop: '15px'}} onClick={handleOverClick} variant="outlined" color="primary">Add Overs</Button>
+                <Button sx={{marginTop: '15px'}} disabled={overObject && true} onClick={handleOverClick} variant="outlined" color="primary">Add Overs</Button>
             </div>
             <Divider sx={{ borderBottomWidth: 3, marginBottom: '20px' }}/>
-            <OverCalculator overData={overObject}/>
+            <OverCalculator overData={overObject} reStart={startNew}/>
         </DialogContent>
       </Dialog>
     </>

@@ -10,6 +10,13 @@ import React, { useEffect, useMemo, useState } from "react";
 import OverComponent from "../overComponent/overComponent";
 
 const MAX_RUN = 7;
+const EXTRA = {
+  Byes: "b",
+  Declare: "d",
+  "Leg Byes": "lb",
+  "No Ball": "n",
+  Wide: "wd",
+};
 
 /* ------------------ helpers ------------------ */
 
@@ -52,7 +59,7 @@ const calculateTotalScore = (overs = []) =>
 
 /* ------------------ component ------------------ */
 
-const OverCalculator = ({ overData }) => {
+const OverCalculator = ({ overData, reStart }) => {
   const [runTypes, setRunTypes] = useState([]);
   const [matchData, setMatchData] = useState(null);
   const [ongoingOver, setOngoingOver] = useState(null);
@@ -68,6 +75,7 @@ const OverCalculator = ({ overData }) => {
   setExtra(null);
   setExtraDialog(false);
   setConfirmReset(false);
+  reStart()
 //   setIsReset(true);
 
   // clear storage
@@ -98,13 +106,13 @@ useEffect(() => {
 
 useEffect(() => {
   const stored = localStorage.getItem("matchData");
-
+console.log(stored, '--------', overData)
   if (stored) {
     setMatchData(JSON.parse(stored));
   } else if (overData) {
     setMatchData(overData);
   }
-}, []); // ✅ run ONCE
+}, [overData]); // ✅ run ONCE
 
 
   /* ---------- load run types ---------- */
@@ -271,9 +279,8 @@ const updateMatchOver = (updatedOver) => {
     );
     }, [matchData, currentOvers, ongoingOver]);
 
-    console.log(matchData,'>>>>>>>>>>.', overData)
-
   /* ------------------ UI ------------------ */
+  console.log(matchData,'>>>>>> matchData')
 
   return (
     <>
@@ -330,7 +337,7 @@ const updateMatchOver = (updatedOver) => {
           {/* Run Types */}
           <Grid container spacing={2}>
             {runTypes.map((r) => (
-              <Grid key={r.id} size={{ xs: 6, md: "grow" }}>
+              <Grid key={r.id} size={{ xs: 3, md: "grow" }}>
                 <Button
                   fullWidth
                   variant="outlined"
@@ -340,7 +347,7 @@ const updateMatchOver = (updatedOver) => {
                     setExtraDialog(true);
                   }}
                 >
-                  {r.value}
+                  {EXTRA[r.value]}
                 </Button>
               </Grid>
             ))}
@@ -349,7 +356,7 @@ const updateMatchOver = (updatedOver) => {
           {/* Runs */}
           <Grid container spacing={2} sx={{ mt: 3 }}>
             {Array.from({ length: MAX_RUN }, (_, i) => (
-              <Grid key={i} size={{ xs: 6, md: "grow" }}>
+              <Grid key={i} size={{ xs: 3, md: "grow" }}>
                 <Button
                   fullWidth
                   variant="outlined"
