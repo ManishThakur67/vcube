@@ -353,8 +353,8 @@ const getOversAndBalls = (overs = []) => {
             </div>       
             : null
         }
-        <div className="d-flex mb-3">  
-            <div className={`${styles.scoreContainer} flex-grow-1`}>
+        <div className="d-flex mb-3">                    
+            <div className={`${styles.scoreContainer}`}>
                 <div className={styles.scoreIn}>Inning {matchData?.currentInning}</div>
                 <div className="d-flex">
                     <div className="flex-fill text-center border-right pt-1">
