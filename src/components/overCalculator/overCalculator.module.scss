@@ -14,8 +14,28 @@
 }
 .toWin{
     background: #9f9f9f;
-    width: fit-content;
+    // width: fit-content;
     color: #ffffff;
     padding: 5px;
+    font-weight: bold;
+    text-align: center;
+}
+.scoreContainer{
+    border: 2px solid #cccccc;
+    border-radius: 10px;
+    padding: 5px;
+    box-shadow: 0px 2px 5px 0px #cccccc;
+    min-width: 8em;
+}
+.scoreIn{
+    border-bottom: 1px solid #cccccc;
+    padding: 0px 10px;
+    text-align: center;
+}
+.span{
+    font-size: 10px;
+    font-weight: 600;
+}
+.scoreMain{
     font-weight: bold;
 }

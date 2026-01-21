@@ -7,10 +7,18 @@ import OverCalculator from '../overCalculator/overCalculator'
 const InstantMatch = ({show, closeModal}) => {
     const [open, setOpen] = useState(false)
     const [over, setOver] = useState('')
-    const [overObject, setOverObj] = useState(null)    
+    const [overObject, setOverObj] = useState(null)  
+    const [totalOver, setTotalOver] = useState(null)
     useEffect(() => {
         setOpen(show)
     },[show])
+
+    useEffect(() => {
+        const overDetails = localStorage.getItem("matchData");
+        if(overDetails){
+            setTotalOver(JSON.parse(overDetails).firstInning.length)
+        }
+    },[totalOver])
 
     useEffect(() => {
         const localOverData = localStorage.getItem('matchData')
@@ -23,6 +31,7 @@ const InstantMatch = ({show, closeModal}) => {
     }
 
     const handleOverClick = () => {
+    setTotalOver(over)
     const createOvers = () => {
         const arr = [];
         for (let i = 0; i < over; i++) {
@@ -50,7 +59,6 @@ const InstantMatch = ({show, closeModal}) => {
         setOver('')
     }
 
-
   return (
     <>
       <Dialog
@@ -60,17 +68,24 @@ const InstantMatch = ({show, closeModal}) => {
         onClose={handleClose}
       >
         <DialogContent sx={{ padding: '32px' }}>
-            <div className='d-flex flex-column align-items-center mb-3'>
-                <strong><label className='mb-3'>Enter Over For Match</label></strong>
-                <NumberField label="Over" name="over"
-                onValueChange={(value) =>
-                    setOver(value)
-                }
-                value={over}
-                min={1}
-                max={100} />
-                <Button sx={{marginTop: '15px'}} disabled={overObject && true} onClick={handleOverClick} variant="outlined" color="primary">Add Overs</Button>
-            </div>
+            {
+                !overObject ? 
+                <div className='d-flex flex-column align-items-center mb-3'>
+                    <strong><label className='mb-3'>Enter Over For Match</label></strong>
+                    <NumberField label="Over" name="over"
+                    onValueChange={(value) =>
+                        setOver(value)
+                    }
+                    value={over}
+                    min={1}
+                    max={100} />
+                    <Button sx={{marginTop: '15px'}} disabled={overObject && true} onClick={handleOverClick} variant="outlined" color="primary">Add Overs</Button>
+                </div>
+                :
+                <div className={styles.totalOver}>
+                    <p>Total Number of Over is {totalOver}</p>
+                </div>
+            }
             <Divider sx={{ borderBottomWidth: 3, marginBottom: '20px' }}/>
             <OverCalculator overData={overObject} reStart={startNew}/>
         </DialogContent>

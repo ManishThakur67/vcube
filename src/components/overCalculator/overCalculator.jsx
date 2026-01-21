@@ -316,11 +316,27 @@ const matchResult = useMemo(
   [matchData, currentOvers]
 );
 
-console.log(matchResult,'>>> matchResult')
-  /* ------------------ UI ------------------ */
+const getOversAndBalls = (overs = []) => {
+  const legalBalls = countLegalBalls(overs);
 
+  const completedOvers = Math.floor(legalBalls / 6);
+  const ballsInCurrentOver = legalBalls % 6;
+
+  return {
+    completedOvers,
+    ballsInCurrentOver,
+    oversFormatted: `${completedOvers}.${ballsInCurrentOver}`,
+  };
+};
+
+
+
+
+  /* ------------------ UI ------------------ */
+  
+  const { completedOvers, ballsInCurrentOver, oversFormatted } = getOversAndBalls(currentOvers);
   return (
-    <>
+      <>
       {matchData && (
         <>
         {
@@ -337,8 +353,28 @@ console.log(matchResult,'>>> matchResult')
             </div>       
             : null
         }
-        <div className="d-flex">  
-            <div className="flex-grow-1">
+        <div className="d-flex mb-3">  
+            <div className={`${styles.scoreContainer} flex-grow-1`}>
+                <div className={styles.scoreIn}>Inning {matchData?.currentInning}</div>
+                <div className="d-flex">
+                    <div className="flex-fill text-center border-right pt-1">
+                      <p className={`${styles.span} mb-0`}>Run</p> 
+                      <p className={`mb-0 ${styles.scoreMain}`}>{calculateTotalScore(currentOvers)}</p>
+                    </div>
+                    <div className="flex-fill text-center pt-1">
+                      <p className={`${styles.span} mb-0`}>Over</p> 
+                      <p className={`mb-0 ${styles.scoreMain}`}>{oversFormatted}</p>
+                    </div>
+                </div>
+                {matchData.currentInning === 2 && (
+                    <div className="border-top">
+                      <p className={`mb-0 ${styles.scoreMain} text-center`}>
+                        Target({matchData.target})
+                      </p>
+                    </div>
+                )}
+            </div>
+            {/* <div className="flex-grow-1">
                 <p className={styles.scoreBoard}>
                     Inning: {matchData?.currentInning} | 
                     Score: {calculateTotalScore(currentOvers)}
@@ -349,7 +385,7 @@ console.log(matchResult,'>>> matchResult')
                         </>
                     )}
                 </p>                
-            </div>          
+            </div>           */}
             {/* {matchData.currentInning === 2 && (
                 <p>
                     {runsRemaining > 0
@@ -358,13 +394,15 @@ console.log(matchResult,'>>> matchResult')
                 </p>
             )} */}
             {isMatchFinished && (
-            <Button
-            color="success"
-            variant="contained"
-            onClick={() => setConfirmReset(true)}
-            >
-            Start New Match
-            </Button>
+              <div className="ms-3">
+                <Button
+                color="success"
+                variant="contained"
+                onClick={() => setConfirmReset(true)}
+                >
+                Start New Match
+                </Button>
+              </div>
             )}
         </div>   
         {matchData.currentInning === 2 && (
@@ -374,26 +412,9 @@ console.log(matchResult,'>>> matchResult')
                     && `Need ${runsRemaining} runs to win in ${ballsRemaining} balls`}
                 </p>
             </div>   
-        )}
-
-        <Grid container spacing={2}>
-            {currentOvers.map((item) => {
-              const key = Object.keys(item).find((k) =>
-                k.startsWith("over ")
-              );
-              return (
-                <Grid key={key} size={{ xs: 12, sm: 12, md: 3 }}>
-                  <OverComponent
-                    data={item}
-                    over={Number(key.split(" ")[1])}
-                  />
-                </Grid>
-              );
-            })}
-          </Grid>
+        )}        
 
           <Divider sx={{ my: 3 }} />
-
           {/* Run Types */}
           <Grid container spacing={2}>
             {runTypes.map((r) => (
@@ -428,6 +449,22 @@ console.log(matchResult,'>>> matchResult')
                 </Button>
               </Grid>
             ))}
+          </Grid>
+          <Divider sx={{ my: 3 }} />
+          <Grid container spacing={2}>
+            {currentOvers.map((item) => {
+              const key = Object.keys(item).find((k) =>
+                k.startsWith("over ")
+              );
+              return (
+                <Grid key={key} size={{ xs: 12, sm: 12, md: 3 }}>
+                  <OverComponent
+                    data={item}
+                    over={Number(key.split(" ")[1])}
+                  />
+                </Grid>
+              );
+            })}
           </Grid>
         </>
       )}
