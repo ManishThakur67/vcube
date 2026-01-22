@@ -14,11 +14,14 @@ const InstantMatch = ({show, closeModal}) => {
     },[show])
 
     useEffect(() => {
-        const overDetails = localStorage.getItem("matchData");
-        if(overDetails){
-            setTotalOver(JSON.parse(overDetails).firstInning.length)
-        }
-    },[totalOver])
+    const stored = localStorage.getItem("matchData");
+    if (stored) {
+        const parsed = JSON.parse(stored);
+        setOverObj(parsed);
+        setTotalOver(parsed.firstInning.length);
+    }
+    }, []);
+
 
     useEffect(() => {
         const localOverData = localStorage.getItem('matchData')
@@ -31,28 +34,27 @@ const InstantMatch = ({show, closeModal}) => {
     }
 
     const handleOverClick = () => {
-    setTotalOver(over)
-    const createOvers = () => {
-        const arr = [];
-        for (let i = 0; i < over; i++) {
-        arr.push({
-            [`over ${i + 1}`]: [],
-            isCompleted: i === 0 ? "Start" : "Pending",
-        });
-        }
-        return arr;
-    };
+  const total = Number(over);
+  setTotalOver(total);
 
-    const matchData = {
-        currentInning: 1,
-        firstInning: createOvers(),
-        secondInning: []
-    };
+  const createOvers = () =>
+    Array.from({ length: total }, (_, i) => ({
+      [`over ${i + 1}`]: [],
+      isCompleted: i === 0 ? "Start" : "Pending",
+    }));
 
-    setOverObj(matchData);
-    localStorage.setItem("matchData", JSON.stringify(matchData));
-    setOver('')
-    };
+  const matchData = {
+    currentInning: 1,
+    firstInning: createOvers(),
+    secondInning: [],
+    target: null,
+  };
+
+  setOverObj(matchData);
+  localStorage.setItem("matchData", JSON.stringify(matchData));
+  setOver("");
+};
+
 
     const startNew = () => {
         setOverObj(null)
@@ -69,8 +71,8 @@ const InstantMatch = ({show, closeModal}) => {
       >
         <DialogContent sx={{ padding: '32px' }}>
             {
-                !overObject ? 
-                <div className='d-flex flex-column align-items-center mb-3'>
+                !overObject && 
+                (<div className='d-flex flex-column align-items-center mb-3'>
                     <strong><label className='mb-3'>Enter Over For Match</label></strong>
                     <NumberField label="Over" name="over"
                     onValueChange={(value) =>
@@ -80,14 +82,20 @@ const InstantMatch = ({show, closeModal}) => {
                     min={1}
                     max={100} />
                     <Button sx={{marginTop: '15px'}} disabled={overObject && true} onClick={handleOverClick} variant="outlined" color="primary">Add Overs</Button>
-                </div>
-                :
+                </div>                
+            )}
+            {
+                overObject && (
                 <div className={styles.totalOver}>
-                    <p>Total Number of Over is {totalOver}</p>
+                    <p>{totalOver} - OVER MATCH</p>
                 </div>
-            }
-            <Divider sx={{ borderBottomWidth: 3, marginBottom: '20px' }}/>
-            <OverCalculator overData={overObject} reStart={startNew}/>
+            )}
+            {overObject && (
+                <>
+                    <Divider sx={{ borderBottomWidth: 3, marginBottom: "20px" }} />
+                    <OverCalculator overData={overObject} reStart={startNew} />
+                </>
+            )}
         </DialogContent>
       </Dialog>
     </>

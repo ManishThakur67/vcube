@@ -10,7 +10,7 @@ const EXTRA = {
   Wide: "w",
 };
 
-const OverComponent = ({ data, over }) => {
+const OverComponent = ({ data, over, onEditBall }) => {
   const overKey = `over ${over}`;
   const balls = data?.[overKey];
   const statusLabel =
@@ -23,50 +23,49 @@ const OverComponent = ({ data, over }) => {
   // Extra → white
   if (ball.extra) {
     return {
-      bgcolor: "#000000",
-      color: "#ffffff",
-      border: "1px solid #ccc",
+      color: "#6d6d6d",
     };
   }
 
   // Six → yellow
   if (ball.run === 6) {
     return {
-      bgcolor: "#FFD700",
-      color: "#000000",
+      color: "#b39700",
     };
   }
 
   // Four → green
   if (ball.run === 4) {
     return {
-      bgcolor: "#4CAF50",
-      color: "#ffffff",
+      color: "#296a2c",
     };
   }
 
-  // dot ball → green
-  if (ball.run === 0) {
+  // wicket ball → green
+  if (ball.wicket) {
     return {
-      bgcolor: "#cccccc",
-      color: "#000000",
+      color: "#f44336",
     };
   }
-
-  // Default → red
-  return {
-    bgcolor: "#f44336",
-    color: "#ffffff",
-  };
 };
 
 
   const renderBall = (ball) => {
+    let text = "";
+
     if (ball.extra) {
-      return `${EXTRA[ball.extra]}${ball.run}`;
+      text += `${EXTRA[ball.extra]}${ball.run}`;
+    } else {
+      text += ball.run;
     }
-    return ball.run;
+
+    if (ball.wicket) {
+      text += " W";
+    }
+
+    return text;
   };
+
 
   return (
     <div>
@@ -78,16 +77,21 @@ const OverComponent = ({ data, over }) => {
         {balls.map((ball, index) => (
           <div className={styles.overGrid} key={index}>
             <Avatar
+              onClick={() => onEditBall(index, ball)}
               sx={{
                 width: 30,
                 height: 30,
                 fontSize: 12,
+                cursor: "pointer",
+                bgcolor: "#e3f2fd",
+                color: "#000000",
                 fontWeight: "bold",
-                ...getBallStyle(ball),
+                ...getBallStyle(ball)
               }}
             >
               {renderBall(ball)}
             </Avatar>
+
           </div>
         ))}
       </div>

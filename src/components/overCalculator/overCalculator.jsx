@@ -11,6 +11,14 @@ import OverComponent from "../overComponent/overComponent";
 import styles from './overCalculator.module.scss'
 
 const MAX_RUN = 7;
+const MAX_BALLS = 6;
+const MAX_WICKETS = 10;
+const getInitialMatchData = () => ({
+  currentInning: 1,
+  firstInning: [],
+  secondInning: [],
+  target: null,
+});
 const EXTRA = {
   Byes: "b",
   Declare: "d",
@@ -21,69 +29,101 @@ const EXTRA = {
 
 /* ------------------ helpers ------------------ */
 
+const isLegalBall = (ball) =>
+  ball.extra !== "Wide" && ball.extra !== "No Ball";
+
+const isOverCompleted = (over) => {
+  const key = Object.keys(over).find(k => k.startsWith("over "));
+  if (!key) return false;
+
+  const legalBalls = over[key].filter(isLegalBall);
+  return legalBalls.length === MAX_BALLS;
+};
+
+const isInningsCompleted = (overs) =>
+  overs.every(o => o.isCompleted === "Completed");
+
+const calculateTotalScore = (overs = []) =>
+  overs.reduce((sum, over) => {
+    const key = Object.keys(over).find(k => k.startsWith("over "));
+    if (!key) return sum;
+    return sum + over[key].reduce((s, b) => s + (b.run || 0), 0);
+  }, 0);
+
+const calculateTotalWickets = (overs = []) =>
+  overs.reduce((sum, over) => {
+    const key = Object.keys(over).find(k => k.startsWith("over "));
+    if (!key) return sum;
+    return sum + over[key].filter(b => b.wicket).length;
+  }, 0);
+
 const createOvers = (count) =>
-  Array.from({ length: count }, (_, i) => ({
+  Array.from({ length: count }).map((_, i) => ({
     [`over ${i + 1}`]: [],
     isCompleted: i === 0 ? "Start" : "Pending",
   }));
 
-const isLegalBall = (ball) => {
-  if (!("run" in ball)) return false;
+const normalizeMatchData = (data) => {
+  if (!data) return null;
 
-  // only Wide & No Ball are illegal deliveries
-  return ball.extra !== "Wide" && ball.extra !== "No Ball";
+  // already valid
+  if (data.currentInning && data.firstInning) {
+    return data;
+  }
+
+  // parent passed only overs
+  if (Array.isArray(data)) {
+    return {
+      currentInning: 1,
+      firstInning: data,
+      secondInning: [],
+      target: null,
+    };
+  }
+
+  return null;
 };
 
 
-const isOverCompleted = (overObj) => {
-  if (!overObj) return false;
-
-  const key = Object.keys(overObj).find((k) => k.startsWith("over "));
-  if (!key) return false;
-
-  const legalBalls = overObj[key].filter(isLegalBall);
-  return legalBalls.length >= 6;
-};
-
-const calculateTotalScore = (overs = []) =>
-  overs.reduce((total, over) => {
-    const key = Object.keys(over).find(k => k.startsWith("over "));
-    return (
-      total +
-      over[key].reduce(
-        (sum, ball) =>
-          sum + (ball.run || 0) + (ball.extraRun || 0),
-        0
-      )
-    );
-  }, 0);
 
 /* ------------------ component ------------------ */
 
 const OverCalculator = ({ overData, reStart }) => {
   const [runTypes, setRunTypes] = useState([]);
-  const [matchData, setMatchData] = useState(null);
+  const [matchData, setMatchData] = useState(() => {
+  const stored = localStorage.getItem("matchData");
+  if (stored) return JSON.parse(stored);
+
+  return normalizeMatchData(overData);
+});
+
+
   const [ongoingOver, setOngoingOver] = useState(null);
 
   const [extra, setExtra] = useState(null);
+  const [isWicket, setIsWicket] = useState(false);
   const [extraDialog, setExtraDialog] = useState(false);
   const [confirmReset, setConfirmReset] = useState(false);
-//   const [isReset, setIsReset] = useState(false);
+const [editDialog, setEditDialog] = useState(false);
+const [editContext, setEditContext] = useState(null);
 
   const resetMatch = () => {
-  setMatchData(null);
+  const fresh = normalizeMatchData(overData);
+
+  setMatchData(fresh);
   setOngoingOver(null);
   setExtra(null);
+  setIsWicket(false);
   setExtraDialog(false);
   setConfirmReset(false);
+  setEditDialog(false);
+  setEditContext(null);
   reStart()
-//   setIsReset(true);
 
-  // clear storage
   localStorage.removeItem("matchData");
-  localStorage.removeItem("overData");
-  localStorage.removeItem("first_inning_score");
 };
+
+
 
 useEffect(() => {
   if (matchData) {
@@ -91,59 +131,26 @@ useEffect(() => {
   }
 }, [matchData]);
 
-// useEffect(() => {
-//   const storedMatch = localStorage.getItem("matchData");
-
-//   if (storedMatch && !isReset) {
-//     setMatchData(JSON.parse(storedMatch));
-//     return;
-//   }
-
-//   if (overData) {
-//     setMatchData(overData);
-//     setIsReset(false);
-//   }
-// }, []); // still run once
-
-useEffect(() => {
-  const stored = localStorage.getItem("matchData");
-console.log(stored, '--------', overData)
-  if (stored) {
-    setMatchData(JSON.parse(stored));
-  } else if (overData) {
-    setMatchData(overData);
-  }
-}, [overData]); // ✅ run ONCE
-
-
   /* ---------- load run types ---------- */
   useEffect(() => {
     getRunTypes().then(setRunTypes);
-  }, []);
+  }, []);  
 
-  /* ---------- initialize match ---------- */
-//   useEffect(() => {
-//   const storedMatch = localStorage.getItem("matchData");
+const currentOvers =
+  matchData?.currentInning === 1
+    ? matchData?.firstInning || []
+    : matchData?.secondInning || [];
 
-//   if (storedMatch) {
-//     setMatchData(JSON.parse(storedMatch));
-//     return;
-//   }
+const matchEnded =
+  matchData?.currentInning === 2 &&
+  isInningsCompleted(matchData.secondInning);
 
-//   if (overData) {
-//     setMatchData(overData);
-//   }
-// }, []); // 👈 EMPTY dependency array
+const hasActiveOver = currentOvers.some(o => o.isCompleted === "Start");
 
-
-
-  /* ---------- derived current overs ---------- */
-  const currentOvers = useMemo(() => {
-    if (!matchData) return [];
-    return matchData.currentInning === 1
-      ? matchData.firstInning
-      : matchData.secondInning;
-  }, [matchData]);
+const disableRunButtons =
+  matchEnded ||
+  calculateTotalWickets(currentOvers) >= MAX_WICKETS ||
+  !hasActiveOver;
 
   /* ---------- track ongoing over ---------- */
   useEffect(() => {
@@ -155,103 +162,127 @@ console.log(stored, '--------', overData)
 
   /* ---------- run click ---------- */
   const addRun = (run) => {
-    if (!ongoingOver || isOverCompleted(ongoingOver)) return;
+  if (!ongoingOver || isOverCompleted(ongoingOver)) return;
 
-    if (
-  matchData.currentInning === 2 &&
+  const wickets = calculateTotalWickets(currentOvers);
+  if (wickets >= MAX_WICKETS) return;
+
+  if (
+    matchData.currentInning === 2 &&
     calculateTotalScore(currentOvers) >= matchData.target
-    ) {
-    return; // match finished
+  ) {
+    return;
   }
 
-    const key = Object.keys(ongoingOver)[0];
+  // ✅ PASS ONLY BALL
+  updateMatchOver({ run });
+};
 
-    const updatedOver = {
-      ...ongoingOver,
-      [key]: [...ongoingOver[key], { run }],
-    };
-
-    updateMatchOver(updatedOver);
-  };
 
   /* ---------- extra run ---------- */
-    const addExtra = (run) => {
-        if (!ongoingOver || isOverCompleted(ongoingOver)) return;
+const addExtra = (run) => {
+  if (!ongoingOver || isOverCompleted(ongoingOver)) return;
 
-        if (
-        matchData.currentInning === 2 &&
-        calculateTotalScore(currentOvers) >= matchData.target
-        ) {
-        return; // match finished
-        }
+  const wickets = calculateTotalWickets(currentOvers);
+  if (wickets >= MAX_WICKETS) return;
 
-        const key = Object.keys(ongoingOver)[0];
+  if (
+    matchData.currentInning === 2 &&
+    calculateTotalScore(currentOvers) >= matchData.target
+  ) {
+    return;
+  }
 
-        const extraRun =
-            extra === "Wide" || extra === "No Ball" ? 1 : 0;
+  const extraRun =
+    extra === "Wide" || extra === "No Ball" ? 1 : 0;
 
-        const updatedOver = {
-            ...ongoingOver,
-            [key]: [
-            ...ongoingOver[key],
-            {
-                run,
-                extra,
-                extraRun   // 👈 IMPORTANT
-            }
-            ]
-        };
+  const ball = {
+    run,
+    ...(extra && { extra, extraRun }),
+    ...(isWicket && { wicket: true }),
+  };
 
-        setExtra(null);
-        setExtraDialog(false);
-        updateMatchOver(updatedOver);
-    };
+  // ✅ PASS ONLY BALL
+  updateMatchOver(ball);
 
+  setExtra(null);
+  setIsWicket(false);
+  setExtraDialog(false);
+};
 
   /* ---------- update match state ---------- */
-const updateMatchOver = (updatedOver) => {
-  const updatedKey = Object.keys(updatedOver).find(k =>
-    k.startsWith("over ")
-  );
-
+const updateMatchOver = (ball) => {
   setMatchData(prev => {
-    if (!prev) return prev;
-
     const inningKey =
       prev.currentInning === 1 ? "firstInning" : "secondInning";
 
-    let overs = prev[inningKey].map(o => {
-      if (!o.hasOwnProperty(updatedKey)) return o;
+    let overs = structuredClone(prev[inningKey]);
+
+    const overIndex = overs.findIndex(o => o.isCompleted === "Start");
+    if (overIndex === -1) return prev;
+
+    const over = overs[overIndex];
+    const overKey = Object.keys(over).find(k => k.startsWith("over "));
+
+    // add ball
+    over[overKey].push(ball);
+
+    /* ---------------- OVER COMPLETION ---------------- */
+    overs = overs.map(o => {
+      const key = Object.keys(o).find(k => k.startsWith("over "));
+      if (!key) return o;
 
       return {
         ...o,
-        [updatedKey]: updatedOver[updatedKey],
-        isCompleted: isOverCompleted(updatedOver)
+        isCompleted: isOverCompleted(o)
           ? "Completed"
-          : "Start",
+          : o.isCompleted,
       };
     });
 
-    /* start next over */
-    if (isOverCompleted(updatedOver)) {
+    /* ---------------- START NEXT OVER ---------------- */
+    if (isOverCompleted(over)) {
       const nextIdx = overs.findIndex(o => o.isCompleted === "Pending");
-
       if (nextIdx !== -1) {
-        overs = overs.map((o, i) =>
-          i === nextIdx ? { ...o, isCompleted: "Start" } : o
-        );
-      } else if (prev.currentInning === 1) {
-        const firstInningScore = calculateTotalScore(overs);
-        const target = firstInningScore + 1;
-
-        return {
-          ...prev,
-          currentInning: 2,
-          target,
-          firstInning: overs,
-          secondInning: createOvers(overs.length),
-        };
+        overs[nextIdx].isCompleted = "Start";
       }
+    }
+
+    /* ---------------- INNINGS CHECK ---------------- */
+    const wickets = calculateTotalWickets(overs);
+    const totalRuns = calculateTotalScore(overs);
+    const allOut = wickets >= MAX_WICKETS;
+    const inningsDone = isInningsCompleted(overs);
+
+    /* -------- END 1ST INNING -------- */
+    if (
+      prev.currentInning === 1 &&
+      (allOut || inningsDone)
+    ) {
+      return {
+        ...prev,
+        currentInning: 2,
+        target: totalRuns + 1,
+        firstInning: overs.map(o => ({
+          ...o,
+          isCompleted: "Completed",
+        })),
+        secondInning: createOvers(overs.length),
+      };
+    }
+
+    /* -------- END 2ND INNING -------- */
+    if (
+      prev.currentInning === 2 &&
+      (allOut || inningsDone)
+    ) {
+      return {
+        ...prev,
+        secondInning: overs.map(o => ({
+          ...o,
+          isCompleted: "Completed",
+        })),
+      };
     }
 
     return {
@@ -260,6 +291,8 @@ const updateMatchOver = (updatedOver) => {
     };
   });
 };
+
+
 
 
   const runsRemaining =
@@ -329,15 +362,132 @@ const getOversAndBalls = (overs = []) => {
   };
 };
 
+const reassignOverStatuses = (overs) => {
+  let startAssigned = false;
+
+  return overs.map(over => {
+    const overKey = Object.keys(over).find(k => k.startsWith("over "));
+    if (!overKey) return over;
+
+    const balls = over[overKey];
+    const completed = isOverCompleted({ [overKey]: balls });
+
+    if (!completed && !startAssigned) {
+      startAssigned = true;
+      return {
+        ...over,
+        isCompleted: "Start",
+      };
+    }
+
+    return {
+      ...over,
+      isCompleted: completed ? "Completed" : "Pending",
+    };
+  });
+};
 
 
+const saveEditedBall = ({
+  overNumber,
+  ballIndex,
+  run,
+  extra,
+  isWicket,
+}) => {
+  const overKey = `over ${overNumber}`;
+
+  setMatchData(prev => {
+    if (!prev) return prev;
+
+    // 🚫 STOP editing if match finished
+    if (
+      prev.currentInning === 2 &&
+      isInningsCompleted(prev.secondInning)
+    ) {
+      return prev;
+    }
+
+    const inningKey =
+      prev.currentInning === 1 ? "firstInning" : "secondInning";
+
+    /* ---------- UPDATE BALL ---------- */
+    let updatedOvers = prev[inningKey].map(over => {
+      if (!over.hasOwnProperty(overKey)) return over;
+
+      const balls = [...over[overKey]];
+
+      const extraRun =
+        extra === "Wide" || extra === "No Ball" ? 1 : 0;
+
+      balls[ballIndex] = {
+        run,
+        ...(extra && { extra, extraRun }),
+        ...(isWicket && { wicket: true }),
+      };
+
+      return {
+        ...over,
+        [overKey]: balls,
+      };
+    });
+
+    /* ---------- REASSIGN OVER STATUS ---------- */
+    updatedOvers = reassignOverStatuses(updatedOvers);
+
+    /* ---------- RECALCULATE ---------- */
+    const wickets = calculateTotalWickets(updatedOvers);
+    const runs = calculateTotalScore(updatedOvers);
+    const inningsDone = isInningsCompleted(updatedOvers);
+    const allOut = wickets >= MAX_WICKETS;
+
+    /* ---------- END 1ST INNING ---------- */
+    if (
+      prev.currentInning === 1 &&
+      (inningsDone || allOut)
+    ) {
+      return {
+        ...prev,
+        currentInning: 2,
+        target: runs + 1,
+        firstInning: updatedOvers.map(o => ({
+          ...o,
+          isCompleted: "Completed",
+        })),
+        secondInning: createOvers(updatedOvers.length),
+      };
+    }
+
+    /* ---------- END 2ND INNING ---------- */
+    if (
+      prev.currentInning === 2 &&
+      (inningsDone || allOut)
+    ) {
+      return {
+        ...prev,
+        secondInning: updatedOvers.map(o => ({
+          ...o,
+          isCompleted: "Completed",
+        })),
+      };
+    }
+
+    /* ---------- NORMAL UPDATE ---------- */
+    return {
+      ...prev,
+      [inningKey]: updatedOvers,
+    };
+  });
+};
+
+console.log(matchData,'matchData')
 
   /* ------------------ UI ------------------ */
   
   const { completedOvers, ballsInCurrentOver, oversFormatted } = getOversAndBalls(currentOvers);
   return (
       <>
-      {matchData && (
+      {Array.isArray(matchData?.firstInning) && matchData.firstInning.length > 0 && (
         <>
         {
             (matchResult !== 'ONGOING' && matchResult) ?
@@ -357,42 +507,26 @@ const getOversAndBalls = (overs = []) => {
             <div className={`${styles.scoreContainer}`}>
                 <div className={styles.scoreIn}>Inning {matchData?.currentInning}</div>
                 <div className="d-flex">
-                    <div className="flex-fill text-center border-right pt-1">
+                    <div className={`flex-fill text-center border-right ${styles.borderScore}`}>
                       <p className={`${styles.span} mb-0`}>Run</p> 
-                      <p className={`mb-0 ${styles.scoreMain}`}>{calculateTotalScore(currentOvers)}</p>
+                      <p className={`mb-0 ${styles.scoreMain}`}>{calculateTotalScore(currentOvers)} /
+                        <span className={styles.wicket}>{calculateTotalWickets(currentOvers)}</span>
+                      </p>
+                      
                     </div>
-                    <div className="flex-fill text-center pt-1">
+                    <div className={`flex-fill text-center border-left-0 ${styles.borderScore}`}>
                       <p className={`${styles.span} mb-0`}>Over</p> 
                       <p className={`mb-0 ${styles.scoreMain}`}>{oversFormatted}</p>
                     </div>
                 </div>
                 {matchData.currentInning === 2 && (
-                    <div className="border-top">
+                    <div className={styles.target}>
                       <p className={`mb-0 ${styles.scoreMain} text-center`}>
                         Target({matchData.target})
                       </p>
                     </div>
                 )}
-            </div>
-            {/* <div className="flex-grow-1">
-                <p className={styles.scoreBoard}>
-                    Inning: {matchData?.currentInning} | 
-                    Score: {calculateTotalScore(currentOvers)}
-
-                    {matchData.currentInning === 2 && (
-                        <>
-                        {" "} | Target: {matchData.target}
-                        </>
-                    )}
-                </p>                
-            </div>           */}
-            {/* {matchData.currentInning === 2 && (
-                <p>
-                    {runsRemaining > 0
-                    ? `Need ${runsRemaining} runs to win`
-                    : "Match Won 🎉"}
-                </p>
-            )} */}
+            </div>            
             {isMatchFinished && (
               <div className="ms-3">
                 <Button
@@ -432,6 +566,20 @@ const getOversAndBalls = (overs = []) => {
                 </Button>
               </Grid>
             ))}
+            <Grid size={{ xs: 3, md: "grow" }}>
+              <Button
+                fullWidth
+                variant="outlined"
+                color="warning"
+                onClick={() => {
+                  setExtra(null);      // no extra
+                  setIsWicket(true);  // mark wicket
+                  setExtraDialog(true);
+                }}
+              >
+                Wicket
+              </Button>
+            </Grid>
           </Grid>
 
           {/* Runs */}
@@ -442,7 +590,7 @@ const getOversAndBalls = (overs = []) => {
                   fullWidth
                   variant="outlined"
                   color="error"
-                  disabled={!ongoingOver}
+                  disabled={disableRunButtons}
                   onClick={() => addRun(i)}
                 >
                   {i}
@@ -461,11 +609,22 @@ const getOversAndBalls = (overs = []) => {
                   <OverComponent
                     data={item}
                     over={Number(key.split(" ")[1])}
+                    onEditBall={(ballIndex, ball) => {
+                      setEditContext({
+                        overKey: key,
+                        ballIndex,
+                        ball
+                      });
+                      setExtra(ball.extra || null);
+                      setIsWicket(!!ball.wicket);
+                      setEditDialog(true);
+                    }}
                   />
+
                 </Grid>
               );
             })}
-          </Grid>
+          </Grid>          
         </>
       )}
 
@@ -487,6 +646,39 @@ const getOversAndBalls = (overs = []) => {
           </Grid>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={editDialog} onClose={() => setEditDialog(false)}>
+        <DialogContent>
+          <Grid container spacing={2}>
+            {Array.from({ length: MAX_RUN }, (_, i) => (
+              <Grid key={i} size={4}>
+                <Button
+                  fullWidth
+                  variant="outlined"
+                  onClick={() => {
+                    if (!editContext) return;
+
+                    saveEditedBall({
+                      overNumber: Number(editContext.overKey.split(" ")[1]),
+                      ballIndex: editContext.ballIndex,
+                      run: i,
+                      extra,
+                      isWicket,
+                    });
+
+                    setEditDialog(false);
+                    setExtra(null);
+                    setIsWicket(false);
+                  }}
+                >
+                  {i}
+                </Button>
+              </Grid>
+            ))}
+          </Grid>
+        </DialogContent>
+      </Dialog>
+
 
     <Dialog open={confirmReset} onClose={() => setConfirmReset(false)}>
         <DialogContent>
