@@ -20,10 +20,10 @@ const HomeComp = () => {
 
   return (
     <>
-      <div className='mb-4'>
-        <Button  variant="contained" onClick={() => setOpenState(true)} color="warning">Instant Score</Button>
+      <div className='mb-4 d-flex justify-content-center'>
+        <Button  variant="contained" onClick={() => setOpenState(true)} color="primary">Play Single Match</Button>
       </div>
-      <div className={`d-flex flex-column justify-content-center align-items-center`}>
+      {/* <div className={`d-flex flex-column justify-content-center align-items-center`}>
         <h2 className={`mb-4 ${styles.tournamentHeading} text-center`}>Play Cricket</h2>
         <div className='d-flex'>
           {
@@ -41,7 +41,7 @@ const HomeComp = () => {
             }) : null
           }                
         </div>
-      </div>
+      </div> */}
       <InstantMatch show={opendialog} closeModal={() => setOpenState(false)}/>
     </>
   )

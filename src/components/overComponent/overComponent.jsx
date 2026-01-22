@@ -77,7 +77,7 @@ const OverComponent = ({ data, over, onEditBall }) => {
         {balls.map((ball, index) => (
           <div className={styles.overGrid} key={index}>
             <Avatar
-              onClick={() => onEditBall(index, ball)}
+              onClick={() => onEditBall?.(index, ball)}
               sx={{
                 width: 30,
                 height: 30,

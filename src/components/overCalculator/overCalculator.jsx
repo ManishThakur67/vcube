@@ -47,8 +47,16 @@ const calculateTotalScore = (overs = []) =>
   overs.reduce((sum, over) => {
     const key = Object.keys(over).find(k => k.startsWith("over "));
     if (!key) return sum;
-    return sum + over[key].reduce((s, b) => s + (b.run || 0), 0);
+
+    return (
+      sum +
+      over[key].reduce(
+        (s, b) => s + (b.run || 0) + (b.extraRun || 0),
+        0
+      )
+    );
   }, 0);
+
 
 const calculateTotalWickets = (overs = []) =>
   overs.reduce((sum, over) => {
@@ -81,10 +89,8 @@ const normalizeMatchData = (data) => {
     };
   }
 
-  return null;
+  return null;  
 };
-
-
 
 /* ------------------ component ------------------ */
 
@@ -145,6 +151,8 @@ const matchEnded =
   matchData?.currentInning === 2 &&
   isInningsCompleted(matchData.secondInning);
 
+console.log(matchEnded, 'matchEnded')
+
 const hasActiveOver = currentOvers.some(o => o.isCompleted === "Start");
 
 const disableRunButtons =
@@ -191,6 +199,10 @@ const addExtra = (run) => {
     calculateTotalScore(currentOvers) >= matchData.target
   ) {
     return;
+  }
+
+  if((extra === 'Decalre' || extra === 'Leg Byes' || extra === 'Byes') && !run){
+    return
   }
 
   const extraRun =
@@ -274,7 +286,11 @@ const updateMatchOver = (ball) => {
     /* -------- END 2ND INNING -------- */
     if (
       prev.currentInning === 2 &&
-      (allOut || inningsDone)
+      (
+        allOut ||
+        inningsDone ||
+        totalRuns >= prev.target   // ✅ TARGET REACHED
+      )
     ) {
       return {
         ...prev,
@@ -284,6 +300,7 @@ const updateMatchOver = (ball) => {
         })),
       };
     }
+
 
     return {
       ...prev,
@@ -480,11 +497,19 @@ const saveEditedBall = ({
   });
 };
 
-console.log(matchData,'matchData')
 
   /* ------------------ UI ------------------ */
   
   const { completedOvers, ballsInCurrentOver, oversFormatted } = getOversAndBalls(currentOvers);
+  const sortedOversDesc = [...currentOvers].sort((a, b) => {
+    const aKey = Object.keys(a).find(k => k.startsWith("over "));
+    const bKey = Object.keys(b).find(k => k.startsWith("over "));
+
+    const aNum = Number(aKey.split(" ")[1]);
+    const bNum = Number(bKey.split(" ")[1]);
+
+    return bNum - aNum; // 🔽 descending
+  });
   return (
       <>
       {Array.isArray(matchData?.firstInning) && matchData.firstInning.length > 0 && (
@@ -539,7 +564,7 @@ console.log(matchData,'matchData')
               </div>
             )}
         </div>   
-        {matchData.currentInning === 2 && (
+        {(matchData.currentInning === 2 && !isMatchFinished) && (
             <div className={`${styles.toWin} mb-2`}>
                 <p className="m-0">
                     {runsRemaining > 0
@@ -600,30 +625,32 @@ console.log(matchData,'matchData')
           </Grid>
           <Divider sx={{ my: 3 }} />
           <Grid container spacing={2}>
-            {currentOvers.map((item) => {
-              const key = Object.keys(item).find((k) =>
-                k.startsWith("over ")
-              );
-              return (
-                <Grid key={key} size={{ xs: 12, sm: 12, md: 3 }}>
-                  <OverComponent
-                    data={item}
-                    over={Number(key.split(" ")[1])}
-                    onEditBall={(ballIndex, ball) => {
-                      setEditContext({
-                        overKey: key,
-                        ballIndex,
-                        ball
-                      });
-                      setExtra(ball.extra || null);
-                      setIsWicket(!!ball.wicket);
-                      setEditDialog(true);
-                    }}
-                  />
+            {sortedOversDesc.map((item) => {
+            const key = Object.keys(item).find(k => k.startsWith("over "));
+            return (
+              <Grid key={key} size={{ xs: 12, sm: 12, md: 3 }}>
+                <OverComponent
+                  data={item}
+                  over={Number(key.split(" ")[1])}
+                  onEditBall={
+                    matchEnded
+                      ? null
+                      : (ballIndex, ball) => {
+                          setEditContext({
+                            overKey: key,
+                            ballIndex,
+                            ball
+                          });
+                          setExtra(ball.extra || null);
+                          setIsWicket(!!ball.wicket);
+                          setEditDialog(true);
+                        }
+                  }
+                />
+              </Grid>
+            );
+          })}
 
-                </Grid>
-              );
-            })}
           </Grid>          
         </>
       )}
