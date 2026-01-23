@@ -92,6 +92,16 @@ const normalizeMatchData = (data) => {
   return null;  
 };
 
+const sortOversDesc = (overs = []) =>
+  [...overs].sort((a, b) => {
+    const aKey = Object.keys(a).find(k => k.startsWith("over "));
+    const bKey = Object.keys(b).find(k => k.startsWith("over "));
+
+    return Number(bKey.split(" ")[1]) - Number(aKey.split(" ")[1]);
+  });
+
+
+
 /* ------------------ component ------------------ */
 
 const OverCalculator = ({ overData, reStart }) => {
@@ -510,6 +520,39 @@ const saveEditedBall = ({
 
     return bNum - aNum; // 🔽 descending
   });
+
+  const canEditOver = (overInning) => {
+    if (!matchData) return false;
+
+    // match finished → no editing
+    if (matchResult && matchResult !== "ONGOING") return false;
+
+    // only current inning editable
+    return matchData.currentInning === overInning;
+  };
+
+  const displayOvers = useMemo(() => {
+  if (!matchData) return [];
+
+  const i1 = sortOversDesc(matchData.firstInning).map(o => ({
+    ...o,
+    __inning: 1,
+  }));
+
+  const i2 = sortOversDesc(matchData.secondInning).map(o => ({
+    ...o,
+    __inning: 2,
+  }));
+
+  // Inning 1 → only show inning 1
+  if (matchData.currentInning === 1) {
+    return i1;
+  }
+
+  // Inning 2 → inning 2 first, inning 1 below
+  return [...i2, ...i1];
+}, [matchData]);
+
   return (
       <>
       {Array.isArray(matchData?.firstInning) && matchData.firstInning.length > 0 && (
@@ -576,82 +619,86 @@ const saveEditedBall = ({
           <Divider sx={{ my: 3 }} />
           {/* Run Types */}
           <Grid container spacing={2}>
-            {runTypes.map((r) => (
-              <Grid key={r.id} size={{ xs: 3, md: "grow" }}>
+              {runTypes.map((r) => (
+                <Grid key={r.id} size={{ xs: 3, md: "grow" }}>
+                  <Button
+                    fullWidth
+                    variant="outlined"
+                    color="warning"
+                    onClick={() => {
+                      setExtra(r.value);
+                      setExtraDialog(true);
+                    }}
+                  >
+                    {EXTRA[r.value]}
+                  </Button>
+                </Grid>
+              ))}
+              <Grid size={{ xs: 3, md: "grow" }}>
                 <Button
                   fullWidth
                   variant="outlined"
                   color="warning"
                   onClick={() => {
-                    setExtra(r.value);
+                    setExtra(null);      // no extra
+                    setIsWicket(true);  // mark wicket
                     setExtraDialog(true);
                   }}
                 >
-                  {EXTRA[r.value]}
+                  Wicket
                 </Button>
               </Grid>
-            ))}
-            <Grid size={{ xs: 3, md: "grow" }}>
-              <Button
-                fullWidth
-                variant="outlined"
-                color="warning"
-                onClick={() => {
-                  setExtra(null);      // no extra
-                  setIsWicket(true);  // mark wicket
-                  setExtraDialog(true);
-                }}
-              >
-                Wicket
-              </Button>
             </Grid>
-          </Grid>
 
-          {/* Runs */}
-          <Grid container spacing={2} sx={{ mt: 3 }}>
-            {Array.from({ length: MAX_RUN }, (_, i) => (
-              <Grid key={i} size={{ xs: 3, md: "grow" }}>
-                <Button
-                  fullWidth
-                  variant="outlined"
-                  color="error"
-                  disabled={disableRunButtons}
-                  onClick={() => addRun(i)}
-                >
-                  {i}
-                </Button>
-              </Grid>
-            ))}
-          </Grid>
-          <Divider sx={{ my: 3 }} />
-          <Grid container spacing={2}>
-            {sortedOversDesc.map((item) => {
-            const key = Object.keys(item).find(k => k.startsWith("over "));
-            return (
-              <Grid key={key} size={{ xs: 12, sm: 12, md: 3 }}>
-                <OverComponent
-                  data={item}
-                  over={Number(key.split(" ")[1])}
-                  onEditBall={
-                    matchEnded
-                      ? null
-                      : (ballIndex, ball) => {
-                          setEditContext({
-                            overKey: key,
-                            ballIndex,
-                            ball
-                          });
-                          setExtra(ball.extra || null);
-                          setIsWicket(!!ball.wicket);
-                          setEditDialog(true);
-                        }
-                  }
-                />
-              </Grid>
-            );
-          })}
+            {/* Runs */}
+            <Grid container spacing={2} sx={{ mt: 3 }}>
+              {Array.from({ length: MAX_RUN }, (_, i) => (
+                <Grid key={i} size={{ xs: 3, md: "grow" }}>
+                  <Button
+                    fullWidth
+                    variant="outlined"
+                    color="error"
+                    disabled={disableRunButtons}
+                    onClick={() => addRun(i)}
+                  >
+                    {i}
+                  </Button>
+                </Grid>
+              ))}
+            </Grid>
+            <Divider sx={{ my: 3 }} />
+            <Grid container spacing={2}>
+              {displayOvers.map((item) => {
+                const key = Object.keys(item).find(k => k.startsWith("over "));
+                const overNumber = Number(key.split(" ")[1]);
+                const inning = item.__inning;
 
-          </Grid>          
+                return (
+                  <Grid key={`${inning}-${key}`} size={{ xs: 12, sm: 12, md: 3 }}>
+                    <OverComponent
+                      data={item}
+                      over={overNumber}
+                      inning={inning}
+                      editable={canEditOver(inning)}
+                      onEditBall={(ballIndex, ball) => {
+                        if (!canEditOver(inning)) return;
+
+                        setEditContext({
+                          overKey: key,
+                          ballIndex,
+                          ball,
+                        });
+                        setExtra(ball.extra || null);
+                        setIsWicket(!!ball.wicket);
+                        setEditDialog(true);
+                      }}
+                    />
+                  </Grid>
+                );
+              })}
+            </Grid>
+
+       
         </>
       )}
 
