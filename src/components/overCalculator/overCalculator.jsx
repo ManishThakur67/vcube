@@ -161,8 +161,6 @@ const matchEnded =
   matchData?.currentInning === 2 &&
   isInningsCompleted(matchData.secondInning);
 
-console.log(matchEnded, 'matchEnded')
-
 const hasActiveOver = currentOvers.some(o => o.isCompleted === "Start");
 
 const disableRunButtons =
