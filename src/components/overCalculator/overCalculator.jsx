@@ -20,10 +20,10 @@ const getInitialMatchData = () => ({
   target: null,
 });
 const EXTRA = {
-  Byes: "b",
-  Declare: "d",
-  "Leg Byes": "lb",
-  "No Ball": "n",
+  Byes: "byes",
+  Declare: "dec",
+  "Leg Byes": "leg byes",
+  "No Ball": "nb",
   Wide: "wd",
 };
 

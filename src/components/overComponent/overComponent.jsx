@@ -6,8 +6,8 @@ const EXTRA = {
   Byes: "b",
   Declare: "d",
   "Leg Byes": "lb",
-  "No Ball": "n",
-  Wide: "w",
+  "No Ball": "nb",
+  Wide: "wd",
 };
 
 const OverComponent = ({ data, over, editable, inning, onEditBall }) => {
@@ -43,7 +43,7 @@ const OverComponent = ({ data, over, editable, inning, onEditBall }) => {
     let text = "";
 
     if (ball.extra) {
-      if(ball.run) text += `${EXTRA[ball.extra]}${ball.run}`;
+      if(ball.run) text += `${EXTRA[ball.extra]} ${ball.run}`;
       else text += `${EXTRA[ball.extra]}`;
     } else text += ball.run;    
 
@@ -51,7 +51,7 @@ const OverComponent = ({ data, over, editable, inning, onEditBall }) => {
       if(ball.run) text += " W";
       else text = "W"
     }
-    
+
     return text;
   };
 
