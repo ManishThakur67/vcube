@@ -55,6 +55,15 @@ const OverComponent = ({ data, over, editable, inning, onEditBall }) => {
     return text;
   };
 
+  const overStats = balls.reduce(
+    (acc, ball) => {
+      acc.runs += (ball.run || 0) + (ball.extraRun || 0);
+      if (ball.wicket) acc.wickets += 1;
+      return acc;
+    },
+    { runs: 0, wickets: 0 }
+  );
+
   return (
     <div
       className={`${styles.overContainer} ${
@@ -65,17 +74,13 @@ const OverComponent = ({ data, over, editable, inning, onEditBall }) => {
         <strong>
           <p className="mb-1">
             Over {over}
-            {statusLabel}
+            {statusLabel} - ({overStats.runs}/{overStats.wickets})
+            {!editable && " 🔒"}
           </p>
         </strong>
-
-        <span className={styles.inningBadge}>
-          INN {inning}
-          {!editable && " 🔒"}
-        </span>
       </div>
 
-      <div className="d-flex flex-wrap">
+      <div className={`d-flex flex-wrap ${styles.Overend}`}>
         {balls.map((ball, index) => (
           <div className={styles.overGrid} key={index}>
             <Avatar

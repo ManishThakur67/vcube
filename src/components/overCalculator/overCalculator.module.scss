@@ -55,3 +55,15 @@
 .borderScore{
     border: 1px solid #008fcb;
 }
+.oversRow {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding-bottom: 10px;
+  scroll-behavior: smooth;
+}
+
+.overItem {
+  min-width: 150px;
+  flex-shrink: 0;
+}

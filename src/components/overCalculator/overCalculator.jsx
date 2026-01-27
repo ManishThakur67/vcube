@@ -100,6 +100,17 @@ const sortOversDesc = (overs = []) =>
     return Number(bKey.split(" ")[1]) - Number(aKey.split(" ")[1]);
   });
 
+const hasAnyBall = (overObj) => {
+  const key = Object.keys(overObj).find(k => k.startsWith("over "));
+  if (!key) return false;
+
+  const balls = overObj[key] || [];
+
+  // show over only if at least one delivery exists
+  return balls.length > 0;
+};
+
+
 
 
 /* ------------------ component ------------------ */
@@ -551,6 +562,23 @@ const saveEditedBall = ({
   return [...i2, ...i1];
 }, [matchData]);
 
+const inning1Overs = displayOvers
+  .filter(o => o.__inning === 1 && hasAnyBall(o))
+  .sort((a, b) => {
+    const aNum = Number(Object.keys(a).find(k => k.startsWith("over ")).split(" ")[1]);
+    const bNum = Number(Object.keys(b).find(k => k.startsWith("over ")).split(" ")[1]);
+    return bNum - aNum; // latest first
+  });
+
+const inning2Overs = displayOvers
+  .filter(o => o.__inning === 2 && hasAnyBall(o))
+  .sort((a, b) => {
+    const aNum = Number(Object.keys(a).find(k => k.startsWith("over ")).split(" ")[1]);
+    const bNum = Number(Object.keys(b).find(k => k.startsWith("over ")).split(" ")[1]);
+    return bNum - aNum;
+  });
+
+
   return (
       <>
       {Array.isArray(matchData?.firstInning) && matchData.firstInning.length > 0 && (
@@ -665,37 +693,69 @@ const saveEditedBall = ({
               ))}
             </Grid>
             <Divider sx={{ my: 3 }} />
-            <Grid container spacing={2}>
-              {displayOvers.map((item) => {
-                const key = Object.keys(item).find(k => k.startsWith("over "));
-                const overNumber = Number(key.split(" ")[1]);
-                const inning = item.__inning;
+            {/* ---------------- INNING 2 OVERS (TOP ROW) ---------------- */}
+            {inning2Overs.length > 0 && (
+              <>
+                <h6 className="mb-2">2nd Inning</h6>
+                <div className={styles.oversRow}>
+                  {inning2Overs.map((item) => {
+                    const key = Object.keys(item).find(k => k.startsWith("over "));
+                    const overNumber = Number(key.split(" ")[1]);
 
-                return (
-                  <Grid key={`${inning}-${key}`} size={{ xs: 12, sm: 12, md: 3 }}>
-                    <OverComponent
-                      data={item}
-                      over={overNumber}
-                      inning={inning}
-                      editable={canEditOver(inning)}
-                      onEditBall={(ballIndex, ball) => {
-                        if (!canEditOver(inning)) return;
+                    return (
+                      <div key={`2-${key}`} className={styles.overItem}>
+                        <OverComponent
+                          data={item}
+                          over={overNumber}
+                          inning={2}
+                          editable={canEditOver(2)}
+                          onEditBall={(ballIndex, ball) => {
+                            if (!canEditOver(2)) return;
 
-                        setEditContext({
-                          overKey: key,
-                          ballIndex,
-                          ball,
-                        });
-                        setExtra(ball.extra || null);
-                        setIsWicket(!!ball.wicket);
-                        setEditDialog(true);
-                      }}
-                    />
-                  </Grid>
-                );
-              })}
-            </Grid>
+                            setEditContext({ overKey: key, ballIndex, ball });
+                            setExtra(ball.extra || null);
+                            setIsWicket(!!ball.wicket);
+                            setEditDialog(true);
+                          }}
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+              </>
+            )}
 
+            {/* ---------------- INNING 1 OVERS (BOTTOM ROW) ---------------- */}
+            {inning1Overs.length > 0 && (
+              <>
+                <h6 className="mt-4 mb-2">1st Inning</h6>
+                <div className={styles.oversRow}>
+                  {inning1Overs.map((item) => {
+                    const key = Object.keys(item).find(k => k.startsWith("over "));
+                    const overNumber = Number(key.split(" ")[1]);
+
+                    return (
+                      <div key={`1-${key}`} className={styles.overItem}>
+                        <OverComponent
+                          data={item}
+                          over={overNumber}
+                          inning={1}
+                          editable={canEditOver(1)}
+                          onEditBall={(ballIndex, ball) => {
+                            if (!canEditOver(1)) return;
+
+                            setEditContext({ overKey: key, ballIndex, ball });
+                            setExtra(ball.extra || null);
+                            setIsWicket(!!ball.wicket);
+                            setEditDialog(true);
+                          }}
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+              </>
+            )}
        
         </>
       )}
