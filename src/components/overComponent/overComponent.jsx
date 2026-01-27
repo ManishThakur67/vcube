@@ -74,25 +74,28 @@ const OverComponent = ({ data, over, editable, inning, onEditBall }) => {
         <strong>
           <p className="mb-1">
             Over {over}
-            {statusLabel} - ({overStats.runs}/{overStats.wickets})
+            {statusLabel} - ({overStats.runs}/<span style={{color: "red"}}>{overStats.wickets}</span>)
             {!editable && " 🔒"}
           </p>
         </strong>
       </div>
 
       <div className={`d-flex flex-wrap ${styles.Overend}`}>
-        {balls.map((ball, index) => (
-          <div className={styles.overGrid} key={index}>
+        {[...balls].reverse().map((ball, rIndex) => {
+        const originalIndex = balls.length - 1 - rIndex;
+
+        return (
+          <div className={styles.overGrid} key={originalIndex}>
             <Avatar
               onClick={() => {
                 if (!editable) return;
-                onEditBall?.(index, ball);
+                onEditBall?.(originalIndex, ball);
               }}
               sx={{
                 width: 30,
                 height: 30,
                 fontSize: 12,
-                fontWeight: "bold",                
+                fontWeight: "bold",
                 cursor: editable ? "pointer" : "not-allowed",
                 opacity: editable ? 1 : 0.8,
                 ...getBallStyle(ball),
@@ -101,7 +104,9 @@ const OverComponent = ({ data, over, editable, inning, onEditBall }) => {
               {renderBall(ball)}
             </Avatar>
           </div>
-        ))}
+        );
+      })}
+
       </div>
     </div>
   );

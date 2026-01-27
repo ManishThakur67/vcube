@@ -72,17 +72,19 @@ const InstantMatch = ({show, closeModal}) => {
         <DialogContent sx={{ padding: '32px' }}>
             {
                 !overObject && 
-                (<div className='d-flex flex-column align-items-center mb-3'>
+                (<div className='text-center'>
                     <strong><label className='mb-3'>Enter Over For Match</label></strong>
-                    <NumberField label="Over" name="over"
-                    onValueChange={(value) =>
-                        setOver(value)
-                    }
-                    value={over}
-                    min={1}
-                    max={100} />
-                    <Button sx={{marginTop: '15px'}} disabled={overObject && true} onClick={handleOverClick} variant="outlined" color="primary">Add Overs</Button>
-                </div>                
+                    <div className='d-flex align-items-center mb-3'>
+                        <NumberField label="Over" name="over"
+                        onValueChange={(value) =>
+                            setOver(value)
+                        }
+                        value={over}
+                        min={1}
+                        max={100} />
+                        <Button sx={{marginLeft: '10px'}} disabled={overObject && true} onClick={handleOverClick} variant="outlined" color="primary">Add</Button>
+                    </div>                                
+                </div>
             )}
             {
                 overObject && (

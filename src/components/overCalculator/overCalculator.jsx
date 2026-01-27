@@ -597,20 +597,20 @@ const inning2Overs = displayOvers
             </div>       
             : null
         }
-        <div className="d-flex mb-3">                    
+        <div className={`d-flex mb-3 ${styles.scoreSticky}`}>                    
             <div className={`${styles.scoreContainer}`}>
                 <div className={styles.scoreIn}>Inning {matchData?.currentInning}</div>
                 <div className="d-flex">
                     <div className={`flex-fill text-center border-right ${styles.borderScore}`}>
                       <p className={`${styles.span} mb-0`}>Run</p> 
-                      <p className={`mb-0 ${styles.scoreMain}`}>{calculateTotalScore(currentOvers)} /
+                      <p className={`mb-0 ${styles.scoreMain}`} style={{color: "#111827"}}>{calculateTotalScore(currentOvers)} /
                         <span className={styles.wicket}>{calculateTotalWickets(currentOvers)}</span>
                       </p>
                       
                     </div>
                     <div className={`flex-fill text-center border-left-0 ${styles.borderScore}`}>
                       <p className={`${styles.span} mb-0`}>Over</p> 
-                      <p className={`mb-0 ${styles.scoreMain}`}>{oversFormatted}</p>
+                      <p className={`mb-0 ${styles.scoreMain}`} style={{color: "#111827"}}>{oversFormatted}</p>
                     </div>
                 </div>
                 {matchData.currentInning === 2 && (
@@ -621,17 +621,15 @@ const inning2Overs = displayOvers
                     </div>
                 )}
             </div>            
-            {isMatchFinished && (
-              <div className="ms-3">
-                <Button
-                color="success"
-                variant="contained"
-                onClick={() => setConfirmReset(true)}
-                >
-                Start New Match
-                </Button>
-              </div>
-            )}
+            <div className="ms-3">
+              <Button
+              color="success"
+              variant="contained"
+              onClick={() => setConfirmReset(true)}
+              >
+              {isMatchFinished ? "Start New Match" : "Reset"}
+              </Button>
+            </div>
         </div>   
         {(matchData.currentInning === 2 && !isMatchFinished) && (
             <div className={`${styles.toWin} mb-2`}>
@@ -682,9 +680,9 @@ const inning2Overs = displayOvers
                 <Grid key={i} size={{ xs: 3, md: "grow" }}>
                   <Button
                     fullWidth
-                    variant="outlined"
-                    color="error"
-                    disabled={disableRunButtons}
+                    variant="contained"
+                    color="primary"
+                    // disabled={disableRunButtons}
                     onClick={() => addRun(i)}
                   >
                     {i}
