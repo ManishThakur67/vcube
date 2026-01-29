@@ -110,6 +110,32 @@ const hasAnyBall = (overObj) => {
   return balls.length > 0;
 };
 
+const buildBall = ({ run = 0, extra = null, isWicket = false }) => {
+  let batsmanRun = 0;
+  let extraRun = 0;
+
+  if (!extra) {
+    // Normal delivery
+    batsmanRun = run;
+  } else if (extra === "Byes" || extra === "Leg Byes") {
+    // Runs go to extras, not batsman
+    extraRun = run;
+  } else if (extra === "No Ball") {
+    // 1 extra + batsman run
+    extraRun = 1;
+    batsmanRun = run;
+  } else if (extra === "Wide") {
+    // Only extra
+    extraRun = 1;
+  }
+
+  return {
+    run: batsmanRun,
+    extraRun,
+    ...(extra && { extra }),
+    ...(isWicket && { wicket: true }),
+  };
+};
 
 
 
@@ -133,6 +159,7 @@ const OverCalculator = ({ overData, reStart }) => {
   const [confirmReset, setConfirmReset] = useState(false);
 const [editDialog, setEditDialog] = useState(false);
 const [editContext, setEditContext] = useState(null);
+const [ballType, setBallType] = useState("run"); 
 
   const resetMatch = () => {
   const fresh = normalizeMatchData(overData);
@@ -202,7 +229,7 @@ const disableRunButtons =
   }
 
   // ✅ PASS ONLY BALL
-  updateMatchOver({ run });
+  updateMatchOver(buildBall({ run }));
 };
 
 
@@ -227,13 +254,14 @@ const addExtra = (run) => {
   const extraRun =
     extra === "Wide" || extra === "No Ball" ? 1 : 0;
 
-  const ball = {
-    run,
-    ...(extra && { extra, extraRun }),
-    ...(isWicket && { wicket: true }),
-  };
+  // const ball = {
+  //   run,
+  //   ...(extra && { extra, extraRun }),
+  //   ...(isWicket && { wicket: true }),
+  // };
 
   // ✅ PASS ONLY BALL
+  const ball = buildBall({ run, extra, isWicket });
   updateMatchOver(ball);
 
   setExtra(null);
@@ -453,14 +481,15 @@ const saveEditedBall = ({
 
       const balls = [...over[overKey]];
 
-      const extraRun =
-        extra === "Wide" || extra === "No Ball" ? 1 : 0;
+      // const extraRun =
+      //   extra === "Wide" || extra === "No Ball" ? 1 : 0;
 
-      balls[ballIndex] = {
-        run,
-        ...(extra && { extra, extraRun }),
-        ...(isWicket && { wicket: true }),
-      };
+      // balls[ballIndex] = {
+      //   run,
+      //   ...(extra && { extra, extraRun }),
+      //   ...(isWicket && { wicket: true }),
+      // };
+      balls[ballIndex] = buildBall({ run, extra, isWicket });
 
       return {
         ...over,
@@ -708,13 +737,27 @@ const inning2Overs = displayOvers
                           inning={2}
                           editable={canEditOver(2)}
                           onEditBall={(ballIndex, ball) => {
-                            if (!canEditOver(2)) return;
+                              if (!canEditOver(2)) return;
 
-                            setEditContext({ overKey: key, ballIndex, ball });
-                            setExtra(ball.extra || null);
-                            setIsWicket(!!ball.wicket);
-                            setEditDialog(true);
-                          }}
+                              setEditContext({ overKey: key, ballIndex, ball });
+
+                              if (ball.wicket) {
+                                setBallType("wicket");
+                                setExtra(null);
+                                setIsWicket(true);
+                              } else if (ball.extra) {
+                                setBallType("extra");
+                                setExtra(ball.extra);
+                                setIsWicket(false);
+                              } else {
+                                setBallType("run");
+                                setExtra(null);
+                                setIsWicket(false);
+                              }
+
+                              setEditDialog(true);
+                            }}
+
                         />
                       </div>
                     );
@@ -740,13 +783,27 @@ const inning2Overs = displayOvers
                           inning={1}
                           editable={canEditOver(1)}
                           onEditBall={(ballIndex, ball) => {
-                            if (!canEditOver(1)) return;
+                              if (!canEditOver(2)) return;
 
-                            setEditContext({ overKey: key, ballIndex, ball });
-                            setExtra(ball.extra || null);
-                            setIsWicket(!!ball.wicket);
-                            setEditDialog(true);
-                          }}
+                              setEditContext({ overKey: key, ballIndex, ball });
+
+                              if (ball.wicket) {
+                                setBallType("wicket");
+                                setExtra(null);
+                                setIsWicket(true);
+                              } else if (ball.extra) {
+                                setBallType("extra");
+                                setExtra(ball.extra);
+                                setIsWicket(false);
+                              } else {
+                                setBallType("run");
+                                setExtra(null);
+                                setIsWicket(false);
+                              }
+
+                              setEditDialog(true);
+                            }}
+
                         />
                       </div>
                     );
@@ -777,7 +834,7 @@ const inning2Overs = displayOvers
         </DialogContent>
       </Dialog>
 
-      <Dialog open={editDialog} onClose={() => setEditDialog(false)}>
+      {/* <Dialog open={editDialog} onClose={() => setEditDialog(false)}>
         <DialogContent>
           <Grid container spacing={2}>
             {Array.from({ length: MAX_RUN }, (_, i) => (
@@ -807,7 +864,105 @@ const inning2Overs = displayOvers
             ))}
           </Grid>
         </DialogContent>
+      </Dialog> */}
+
+      <Dialog open={editDialog} onClose={() => setEditDialog(false)}>
+        <DialogContent>
+
+          {/* BALL TYPE SELECTOR */}
+          <Grid container spacing={2} sx={{ mb: 2 }}>
+            <Grid size={4}>
+              <Button
+                fullWidth
+                variant={ballType === "run" ? "contained" : "outlined"}
+                onClick={() => {
+                  setBallType("run");
+                  setExtra(null);
+                  setIsWicket(false);
+                }}
+              >
+                Run
+              </Button>
+            </Grid>
+
+            <Grid size={4}>
+              <Button
+                fullWidth
+                variant={ballType === "extra" ? "contained" : "outlined"}
+                onClick={() => {
+                  setBallType("extra");
+                  setIsWicket(false);
+                }}
+              >
+                Extra
+              </Button>
+            </Grid>
+
+            <Grid size={4}>
+              <Button
+                fullWidth
+                color="error"
+                variant={ballType === "wicket" ? "contained" : "outlined"}
+                onClick={() => {
+                  setBallType("wicket");
+                  setExtra(null);
+                  setIsWicket(true);
+                }}
+              >
+                Wicket
+              </Button>
+            </Grid>
+          </Grid>
+          {/* EXTRA TYPE SELECTOR (only when Extra selected) */}
+          {ballType === "extra" && (
+            <Grid container spacing={2} sx={{ mb: 2 }}>
+              {Object.keys(EXTRA).map((key) => (
+                <Grid key={key} size={6}>
+                  <Button
+                    fullWidth
+                    variant={extra === key ? "contained" : "outlined"}
+                    onClick={() => setExtra(key)}
+                  >
+                    {key}
+                  </Button>
+                </Grid>
+              ))}
+            </Grid>
+          )}
+
+
+          {/* RUN SELECTION */}
+          <Grid container spacing={2}>
+            {Array.from({ length: MAX_RUN }, (_, i) => (
+              <Grid key={i} size={4}>
+                <Button
+                  fullWidth
+                  variant="outlined"
+                  onClick={() => {
+                    // if (!editContext) return;
+                    if (ballType === "extra" && !extra) return;
+
+                    saveEditedBall({
+                      overNumber: Number(editContext.overKey.split(" ")[1]),
+                      ballIndex: editContext.ballIndex,
+                      run: ballType !== "wicket" ? i : 0,
+                      extra: ballType === "extra" ? extra : null,
+                      isWicket: ballType === "wicket",
+                    });
+
+                    setEditDialog(false);
+                    setExtra(null);
+                    setIsWicket(false);
+                  }}
+                >
+                  {i}
+                </Button>
+              </Grid>
+            ))}
+          </Grid>
+        </DialogContent>
       </Dialog>
+
 
 
     <Dialog open={confirmReset} onClose={() => setConfirmReset(false)}>

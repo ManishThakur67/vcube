@@ -21,19 +21,19 @@ const OverComponent = ({ data, over, editable, inning, onEditBall }) => {
 
   const getBallStyle = (ball) => {
     if (ball.wicket) {
-      return { bgcolor: "#f44336" }; // 🔴 wicket
+      return { bgcolor: "#DC2626", color: '#FFFFFF' }; // 🔴 wicket
     }
 
     if (ball.extra) {
-      return { color: "#e3f2fd", bgcolor: "#000000"}; // ⚪ extra
+      return { color: "#0F172A", bgcolor: "#38BDF8"}; // ⚪ extra
     }
 
     if (ball.run === 6) {
-      return { bgcolor: "#ffdc1f", color: '#000000'}; // 🟡 six
+      return { bgcolor: "#FACC15", color: '#111827'}; // 🟡 six
     }
 
     if (ball.run === 4) {
-      return { bgcolor: "#296a2c" }; // 🟢 four
+      return { bgcolor: "#16A34A", color: '#FFFFFF' }; // 🟢 four
     }
 
     return {bgcolor: "#e3f2fd", color: "#000000"};

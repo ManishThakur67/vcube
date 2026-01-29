@@ -74,7 +74,7 @@ const InstantMatch = ({show, closeModal}) => {
                 !overObject && 
                 (<div className='text-center'>
                     <strong><label className='mb-3'>Enter Over For Match</label></strong>
-                    <div className='d-flex align-items-center mb-3'>
+                    <div className='d-flex justify-content-center mb-3'>
                         <NumberField label="Over" name="over"
                         onValueChange={(value) =>
                             setOver(value)
