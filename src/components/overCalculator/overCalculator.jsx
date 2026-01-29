@@ -22,7 +22,7 @@ const getInitialMatchData = () => ({
 const EXTRA = {
   Byes: "byes",
   Declare: "dec",
-  "Leg Byes": "leg byes",
+  "Leg Byes": "leg by",
   "No Ball": "nb",
   Wide: "wd",
 };
@@ -114,28 +114,35 @@ const buildBall = ({ run = 0, extra = null, isWicket = false }) => {
   let batsmanRun = 0;
   let extraRun = 0;
 
+  // 🟢 NORMAL BALL
   if (!extra) {
-    // Normal delivery
     batsmanRun = run;
-  } else if (extra === "Byes" || extra === "Leg Byes") {
-    // Runs go to extras, not batsman
+  }
+
+  // 🟡 BYES / LEG BYES (not batsman runs)
+  else if (extra === "Byes" || extra === "Leg Byes") {
     extraRun = run;
-  } else if (extra === "No Ball") {
-    // 1 extra + batsman run
-    extraRun = 1;
-    batsmanRun = run;
-  } else if (extra === "Wide") {
-    // Only extra
-    extraRun = 1;
+  }
+
+  // 🔵 NO BALL (1 penalty + batsman runs)
+  else if (extra === "No Ball") {
+    extraRun = 1 + run;   // includes runs taken
+    batsmanRun = 0;       // your UI doesn't track batsman stats separately
+  }
+
+  // 🟣 WIDE (1 penalty + any run taken is also extra)
+  else if (extra === "Wide") {
+    extraRun = 1 + run;   // wide + runs run
   }
 
   return {
     run: batsmanRun,
     extraRun,
     ...(extra && { extra }),
-    ...(isWicket && { wicket: true }),
+    ...(isWicket && { wicket: true }), // 🚨 NEVER zero runs because of wicket
   };
 };
+
 
 
 
@@ -783,7 +790,7 @@ const inning2Overs = displayOvers
                           inning={1}
                           editable={canEditOver(1)}
                           onEditBall={(ballIndex, ball) => {
-                              if (!canEditOver(2)) return;
+                              if (!canEditOver(1)) return;
 
                               setEditContext({ overKey: key, ballIndex, ball });
 
@@ -917,13 +924,14 @@ const inning2Overs = displayOvers
           {ballType === "extra" && (
             <Grid container spacing={2} sx={{ mb: 2 }}>
               {Object.keys(EXTRA).map((key) => (
-                <Grid key={key} size={6}>
+                <Grid key={key} size={'auto'}>
                   <Button
                     fullWidth
                     variant={extra === key ? "contained" : "outlined"}
+                    color="warning"
                     onClick={() => setExtra(key)}
                   >
-                    {key}
+                    {EXTRA[key]}
                   </Button>
                 </Grid>
               ))}
@@ -945,7 +953,7 @@ const inning2Overs = displayOvers
                     saveEditedBall({
                       overNumber: Number(editContext.overKey.split(" ")[1]),
                       ballIndex: editContext.ballIndex,
-                      run: ballType !== "wicket" ? i : 0,
+                      run: i,
                       extra: ballType === "extra" ? extra : null,
                       isWicket: ballType === "wicket",
                     });

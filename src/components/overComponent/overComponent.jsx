@@ -40,20 +40,37 @@ const OverComponent = ({ data, over, editable, inning, onEditBall }) => {
   };
 
   const renderBall = (ball) => {
-    let text = "";
+  if (!ball) return "";
 
-    if (ball.extra) {
-      if(ball.run) text += `${EXTRA[ball.extra]} ${ball.run}`;
-      else text += `${EXTRA[ball.extra]}`;
-    } else text += ball.run;    
+  const run = ball.run || 0;
+  const extraRun = ball.extraRun || 0;
 
-    if (ball.wicket) {
-      if(ball.run) text += " W";
-      else text = "W"
+  // 🔴 Wicket only
+  if (ball.wicket && !ball.extra && run === 0) return "W";
+
+  // 🟣 Extras
+  if (ball.extra) {
+    const code = EXTRA[ball.extra] || "";
+
+    // No Ball / Wide → penalty already inside extraRun
+    if (ball.extra === "No Ball" || ball.extra === "Wide") {
+      const actualRuns = extraRun - 1; // subtract penalty
+      if (actualRuns > 0) return `${code}+${actualRuns}`;
+      return code;
     }
 
-    return text;
-  };
+    // Byes / Leg Byes
+    if (extraRun > 0) return `${code}${extraRun}`;
+    return code;
+  }
+
+  // 🔴 Wicket with runs
+  if (ball.wicket && run > 0) return `${run}W`;
+
+  // 🟢 Normal run
+  return run;
+};
+
 
   const overStats = balls.reduce(
     (acc, ball) => {
